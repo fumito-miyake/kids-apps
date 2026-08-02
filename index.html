@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🌈 こども の あぷり</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:"Rounded Mplus 1c","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+}
+
+body{
+    margin:0;
+    background:#f7fbff;
+    color:#333;
+}
+
+header{
+    background:linear-gradient(90deg,#67c8ff,#7f8cff);
+    color:white;
+    text-align:center;
+    padding:24px 16px;
+    font-size:2rem;
+    font-weight:bold;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+.section{
+    margin-bottom:40px;
+}
+
+.section-title{
+    font-size:1.8rem;
+    font-weight:bold;
+    margin-bottom:16px;
+    color:#444;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:18px;
+}
+
+.card{
+    display:block;
+    text-decoration:none;
+    color:#333;
+    border-radius:24px;
+    padding:18px;
+    transition:.18s;
+    box-shadow:0 6px 18px rgba(0,0,0,.12);
+}
+
+.card:hover{
+    transform:translateY(-3px) scale(1.02);
+}
+
+.card:active{
+    transform:scale(.98);
+}
+
+.card-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.icon{
+    font-size:42px;
+    flex-shrink:0;
+}
+
+.title{
+    font-size:1.35rem;
+    font-weight:bold;
+    line-height:1.2;
+}
+
+.desc{
+    margin-top:12px;
+    font-size:1rem;
+    line-height:1.5;
+}
+
+/* セクション色 */
+
+.green{
+    background:#c9f7d5;
+}
+
+.orange{
+    background:#ffe1b8;
+}
+
+.blue{
+    background:#cfe6ff;
+}
+
+@media (max-width:700px){
+
+header{
+    font-size:1.6rem;
+}
+
+.grid{
+    grid-template-columns:1fr;
+}
+
+.title{
+    font-size:1.25rem;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+🌈 こども の あぷり
+</header>
+
+<div id="contents" class="container"></div>
+
+<script>
+
+const GUIDE = {
+
+"🌱 せいかつ":[
+{
+path:"apps/write.html",
+title:"あいうえお",
+summary:"もじをよんでくれるよ",
+icon:"📝"
+},
+{
+path:"apps/count.html",
+title:"おかね の けいさん",
+summary:"おかねをかぞえてくれるよ",
+icon:"🪙"
+},
+{
+path:"apps/timer.html",
+title:"さきよみ たいまー",
+summary:"やることがいつおわるかわかるよ",
+icon:"⏰"
+}
+],
+
+"🎈 げーむ（かんたん）":[
+{
+path:"apps/cutting.html",
+title:"おやさい ぱっかん",
+summary:"いろんなおやさいをわろう",
+icon:"🥕"
+},
+{
+path:"apps/vehicle.html",
+title:"のりもの ごーごー",
+summary:"いろんなのりものをはしらせよう",
+icon:"🚌"
+},
+{
+path:"apps/bubble.html",
+title:"しゃぼんだま",
+summary:"しゃぼんだまをわって のりものをつもう",
+icon:"🫧"
+},
+{
+path:"apps/tsumiki.html",
+title:"つみき どっかん",
+summary:"つみきをつんで どっかんとこわそう",
+icon:"🧱"
+},
+{
+path:"apps/odoshi.html",
+title:"ししおどし",
+summary:"ししおどしができるよ",
+icon:"🎍"
+}
+],
+
+"🚀 げーむ（むずかしい）":[
+{
+path:"apps/drive.html",
+title:"くるま げーむ",
+summary:"くるまをあんぜんにはしらせよう",
+icon:"🚗"
+},
+{
+path:"apps/maze.html",
+title:"めいろ げーむ",
+summary:"いろんなめいろであそべるよ",
+icon:"🌀"
+},
+{
+path:"apps/physics.html",
+title:"ぶろっく ぼーる",
+summary:"ぶろっくをおいてぼーるをとばそう",
+icon:"⚽"
+}
+]
+
+};
+
+const colors=[
+"green",
+"orange",
+"blue"
+];
+
+const root=document.getElementById("contents");
+
+Object.entries(GUIDE).forEach(([section,pages],index)=>{
+
+    const sectionElm=document.createElement("section");
+    sectionElm.className="section";
+
+    sectionElm.innerHTML=`
+        <div class="section-title">${section}</div>
+        <div class="grid"></div>
+    `;
+
+    const grid=sectionElm.querySelector(".grid");
+    const color=colors[index % colors.length];
+
+    pages.forEach(page=>{
+
+        const card=document.createElement("a");
+        card.href=page.path;
+        card.className=`card ${color}`;
+
+        card.innerHTML=`
+            <div class="card-header">
+                <div class="icon">${page.icon}</div>
+                <div class="title">${page.title}</div>
+            </div>
+            <div class="desc">${page.summary}</div>
+        `;
+
+        grid.appendChild(card);
+
+    });
+
+    root.appendChild(sectionElm);
+
+});
+
+</script>
+
+</body>
+</html>
