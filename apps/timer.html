@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>こども時計スケジュール</title>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-now: #4A90E2;
+            --color-mid: #F5A623;
+            --color-goal: #D0021B;
+            --color-bg: #F8FAFC;
+            --color-panel: #FFFFFF;
+            --color-text: #1E293B;
+            --color-border: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* 左画面: 視覚化エリア */
+        .visual-area {
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%);
+            border-right: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+
+        /* プログレスバーエリア */
+        .progress-section {
+            width: 98%; 
+            max-width: 1400px; 
+            position: relative;
+            height: 580px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .progress-track {
+            height: 60px;
+            background-color: #E2E8F0;
+            border-radius: 16px;
+            margin: 0 40px; 
+            position: relative;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 5;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 16px;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            min-width: 0;
+        }
+
+        /* 時計ユニット共通 */
+        .clock-unit {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .unit-now { top: 10px; left: 0px; flex-direction: row; }
+        .unit-goal { top: 10px; right: 0px; flex-direction: row-reverse; }
+
+        /* おわり: 中央固定 */
+        .unit-pred { 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            flex-direction: row; 
+            width: fit-content;
+        }
+
+        .clock-face {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            border: 6px solid #334155;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.3s;
+        }
+
+        .clock-number {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #475569;
+            padding: 1px; 
+        }
+
+        .clock-hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom;
+            background: #1e293b;
+            border-radius: 10px;
+        }
+        .hand-hour { width: 6px; height: 35px; z-index: 2; }
+        .hand-min { width: 4px; height: 50px; z-index: 1; }
+        .clock-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: #1e293b;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+        }
+
+        .info-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+        .unit-goal .info-group { align-items: flex-end; }
+
+        .digital-time { font-size: 26px; font-weight: 800; color: #1e293b; line-height: 1; }
+        .label-text { font-size: 15px; font-weight: 800; color: #64748b; }
+
+        .btn-refresh {
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: 4px;
+        }
+
+        .unit-now .clock-face { border-color: var(--color-now); }
+        .unit-goal .clock-face { border-color: var(--color-goal); }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.08); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        .warning-pulse { 
+            animation: pulse 1.2s infinite ease-in-out; 
+        }
+
+        /* 右画面: 管理エリア */
+        .management-area {
+            flex: 0 0 30%;
+            background-color: var(--color-panel);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--color-border);
+            height: 100vh;
+        }
+
+        .area-header {
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .area-title {
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-list-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 10px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            gap: 8px;
+            cursor: grab;
+            user-select: none;
+        }
+        .task-item:active { cursor: grabbing; }
+        .task-item.dragging { opacity: 0.5; background: #f1f5f9; border-style: dashed; }
+
+        .task-item.disabled { opacity: 0.4; text-decoration: line-through; }
+        .task-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+        .task-info { flex: 1; display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 8px; pointer-events: none; }
+        .task-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .task-duration { font-size: 13px; color: #64748b; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+
+        .btn-delete {
+            background: #fee2e2; border: none; color: #ef4444;
+            width: 24px; height: 24px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+            font-size: 16px;
+            pointer-events: auto;
+        }
+
+        .add-task-form {
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 1fr 60px 45px;
+            gap: 6px;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 8px; border: 1px solid var(--color-border); border-radius: 6px;
+            font-family: inherit; font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: var(--color-now); color: white; border: none;
+            border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 16px;
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); z-index: 1000;
+            justify-content: center; align-items: center; backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: white; padding: 24px; border-radius: 24px; width: 300px; text-align: center;
+        }
+
+        .alert-banner {
+            position: absolute; top: 15px; background: var(--color-goal); color: white;
+            padding: 10px 24px; border-radius: 99px; font-weight: 800; font-size: 18px;
+            display: none; z-index: 100; box-shadow: 0 10px 15px rgba(220, 38, 38, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="visual-area">
+            <div id="alertBanner" class="alert-banner">じかんを すぎてるよ！</div>
+
+            <div class="progress-section">
+                <div class="clock-unit unit-now">
+                    <div class="clock-face" id="face-now" onclick="openTimeModal('now')">
+                        <div class="clock-center"></div>
+                        <div id="nowHour" class="clock-hand hand-hour"></div>
+                        <div id="nowMin" class="clock-hand hand-min"></div>
+                    </div>
+                    <div class="info-group">
+                        <span class="label-text">いま</span>
+                        <span id="nowDigital" class="digital-time">12:00</span>
+                        <button class="btn-refresh" onclick="resetNow()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="clock-unit unit-goal">
+                    <div class="clock-face" id="face-goal" onclick="openTimeModal('goal')">
+                        <div class="clock-center"></div>
+                        <div id="goalHour" class="clock-hand hand-hour"></div>
+                        <div id="goalMin" class="clock-hand hand-min"></div>
+                    </div>
+                    <div class="info-group">
+                        <span class="label-text">もくひょう</span>
+                        <span id="goalDigital" class="digital-time">12:00</span>
+                        <button class="btn-refresh" onclick="resetGoal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="progress-track">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+
+                <div id="predictionClock" class="clock-unit unit-pred">
+                    <div class="clock-face" id="predictionFace">
+                        <div class="clock-center"></div>
+                        <div id="predHour" class="clock-hand hand-hour"></div>
+                        <div id="predMin" class="clock-hand hand-min"></div>
+                    </div>
+                    <div class="info-group">
+                        <span class="label-text">おわる</span>
+                        <span id="predDigital" class="digital-time">12:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="management-area">
+            <div class="area-header">
+                <div class="area-title">
+                    やるリスト
+                    <span id="totalTaskTime" style="font-size: 14px; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 8px;">0分</span>
+                </div>
+            </div>
+            <div class="task-list-container" id="taskListContainer">
+                <div id="taskList"></div>
+            </div>
+            <div class="add-task-form">
+                <input type="text" id="taskInput" placeholder="なにする？">
+                <input type="number" id="durationInput" placeholder="分">
+                <button onclick="addTask()" class="btn-primary">＋</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 時刻設定モーダル -->
+    <div id="timeModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="font-weight: 800; margin-bottom: 15px;">じかんをかえる</h3>
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <input type="number" id="editHour" min="0" max="23" style="width: 80px; font-size: 28px; text-align: center; border: 2px solid #f1f5f9; padding: 5px;">
+                <span style="font-size: 24px; font-weight: bold;">:</span>
+                <input type="number" id="editMin" min="0" max="59" style="width: 80px; font-size: 28px; text-align: center; border: 2px solid #f1f5f9; padding: 5px;">
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeModal()" style="flex:1; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 700;">やめる</button>
+                <button onclick="saveTime()" class="btn-primary" style="flex:1; padding: 12px;">きめる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 起動時オリエンテーションダイアログ -->
+    <div id="orientationModal" class="modal" style="display: flex;">
+        <div class="modal-content" style="width: 320px;">
+            <h3 style="font-weight: 800; margin-bottom: 15px; font-size: 20px;">おねがい</h3>
+            <p style="margin-bottom: 20px; font-size: 16px; color: #475569; font-weight: 700;">よこがめんにしてね</p>
+            <button onclick="closeOrientationModal()" class="btn-primary" style="width: 100%; padding: 12px;">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'kids_clock_v13_stable';
+
+        let state = {
+            now: { h: 0, m: 0 },
+            goal: { h: 0, m: 0 },
+            tasks: [],
+            editingType: ''
+        };
+
+        function setupClockNumbers() {
+            const faces = ['face-now', 'face-goal', 'predictionFace'];
+            faces.forEach(faceId => {
+                const face = document.getElementById(faceId);
+                for (let i = 1; i <= 12; i++) {
+                    const num = document.createElement('div');
+                    num.className = 'clock-number';
+                    const angle = i * 30;
+                    num.style.transform = `rotate(${angle}deg)`;
+                    const innerNum = document.createElement('div');
+                    innerNum.innerText = i;
+                    innerNum.style.transform = `rotate(${-angle}deg)`;
+                    innerNum.style.marginTop = "6px";
+                    num.appendChild(innerNum);
+                    face.appendChild(num);
+                }
+            });
+        }
+
+        window.onload = () => {
+            setupClockNumbers();
+            
+            const hasSavedData = loadFromStorage();
+            
+            if (!hasSavedData) {
+                const d = new Date();
+                state.now = { h: d.getHours(), m: d.getMinutes() };
+                const gd = new Date();
+                gd.setHours(d.getHours() + 1);
+                state.goal = { h: gd.getHours(), m: gd.getMinutes() };
+                state.tasks = [{ id: Date.now(), name: 'しゅくだい', duration: 30, enabled: true }];
+            }
+
+            initDragAndDrop();
+            updateUI(false); 
+            setInterval(() => updateUI(false), 60000);
+        };
+
+        function closeOrientationModal() {
+            document.getElementById('orientationModal').style.display = 'none';
+        }
+
+        function saveToStorage() { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); 
+        }
+
+        function loadFromStorage() { 
+            const saved = localStorage.getItem(STORAGE_KEY); 
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.tasks && parsed.now && parsed.goal) {
+                        state = parsed;
+                        return true;
+                    }
+                } catch(e) {
+                    console.error("Storage load error", e);
+                }
+            }
+            return false;
+        }
+
+        function resetNow() {
+            const d = new Date();
+            state.now = { h: d.getHours(), m: d.getMinutes() };
+            updateUI(true);
+        }
+
+        function resetGoal() {
+            const d = new Date();
+            d.setHours(d.getHours() + 1);
+            state.goal = { h: d.getHours(), m: d.getMinutes() };
+            updateUI(true);
+        }
+
+        function addTask() {
+            const nameEl = document.getElementById('taskInput');
+            const durEl = document.getElementById('durationInput');
+            const name = nameEl.value.trim();
+            const duration = parseInt(durEl.value);
+            if (name && duration > 0) {
+                state.tasks.push({ id: Date.now(), name, duration, enabled: true });
+                nameEl.value = '';
+                durEl.value = '';
+                updateUI(true);
+            }
+        }
+
+        function toggleTask(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (task) { 
+                task.enabled = !task.enabled; 
+                updateUI(true); 
+            }
+        }
+
+        function deleteTask(id) {
+            state.tasks = state.tasks.filter(t => t.id !== id);
+            updateUI(true);
+        }
+
+        function openTimeModal(type) {
+            state.editingType = type;
+            document.getElementById('editHour').value = state[type].h;
+            document.getElementById('editMin').value = state[type].m;
+            document.getElementById('timeModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('timeModal').style.display = 'none'; }
+
+        function saveTime() {
+            const h = parseInt(document.getElementById('editHour').value);
+            const m = parseInt(document.getElementById('editMin').value);
+            if (!isNaN(h) && h >= 0 && h < 24 && !isNaN(m) && m >= 0 && m < 60) {
+                state[state.editingType] = { h, m };
+                closeModal();
+                updateUI(true);
+            }
+        }
+
+        function initDragAndDrop() {
+            const list = document.getElementById('taskList');
+            
+            list.addEventListener('dragstart', (e) => {
+                if (e.target.classList.contains('task-item')) {
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', e.target.dataset.id);
+                }
+            });
+
+            list.addEventListener('dragend', (e) => {
+                if (e.target.classList.contains('task-item')) {
+                    e.target.classList.remove('dragging');
+                    const newTasks = [];
+                    const items = list.querySelectorAll('.task-item');
+                    items.forEach(item => {
+                        const id = parseInt(item.dataset.id);
+                        const task = state.tasks.find(t => t.id === id);
+                        if (task) newTasks.push(task);
+                    });
+                    state.tasks = newTasks;
+                    updateUI(true);
+                }
+            });
+
+            list.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const dragging = document.querySelector('.dragging');
+                if (!dragging) return;
+                const afterElement = getDragAfterElement(list, e.clientY);
+                if (afterElement == null) {
+                    list.appendChild(dragging);
+                } else {
+                    list.insertBefore(dragging, afterElement);
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function toMinutes(time) { return time.h * 60 + time.m; }
+        function fromMinutes(mins) { return { h: (Math.floor(mins / 60) + 24) % 24, m: Math.floor(mins % 60) }; }
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            state.tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.enabled ? '' : 'disabled'}`;
+                item.draggable = true;
+                item.dataset.id = task.id;
+                item.innerHTML = `
+                    <input type="checkbox" ${task.enabled ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                    <div class="task-info">
+                        <span class="task-name">${task.name}</span>
+                        <span class="task-duration">${task.duration}分</span>
+                    </div>
+                    <button class="btn-delete" onclick="deleteTask(${task.id})">×</button>
+                `;
+                taskList.appendChild(item);
+            });
+        }
+
+        function updateUI(shouldSave = false) {
+            if (!document.querySelector('.dragging')) {
+                renderTasks();
+            }
+
+            let activeTotalMins = state.tasks.reduce((sum, t) => t.enabled ? sum + t.duration : sum, 0);
+            document.getElementById('totalTaskTime').innerText = `${activeTotalMins}分`;
+
+            updateClock('now', state.now);
+            updateClock('goal', state.goal);
+
+            const predMinsTotal = toMinutes(state.now) + activeTotalMins;
+            updateClock('pred', fromMinutes(predMinsTotal));
+
+            const startMins = toMinutes(state.now);
+            let goalMins = toMinutes(state.goal);
+            if (goalMins <= startMins) goalMins += 1440;
+            
+            const range = goalMins - startMins;
+            const elapsed = Math.max(0, predMinsTotal - startMins);
+            const ratio = range > 0 ? elapsed / range : 0;
+            
+            const percentage = Math.max(ratio * 100, 0);
+            const fill = document.getElementById('progressFill');
+            fill.style.width = `${Math.min(percentage, 100)}%`;
+            
+            let color = ratio <= 0.5 ? "var(--color-now)" : (ratio < 1.0 ? "var(--color-mid)" : "var(--color-goal)");
+            if (ratio > 1.0) {
+                fill.style.background = "var(--color-goal)";
+                fill.style.width = "100%";
+            } else {
+                fill.style.background = `linear-gradient(90deg, var(--color-now) 0%, ${color} 100%)`;
+            }
+
+            const timeLeft = goalMins - predMinsTotal;
+            const predFace = document.getElementById('predictionFace');
+            const alertBanner = document.getElementById('alertBanner');
+            const predClockUnit = document.getElementById('predictionClock');
+
+            predClockUnit.classList.remove('warning-pulse');
+            alertBanner.style.display = 'none';
+            predFace.style.backgroundColor = 'white';
+
+            if (timeLeft <= 0) {
+                alertBanner.style.display = 'block';
+                predFace.style.borderColor = "var(--color-goal)";
+                predFace.style.backgroundColor = "#fff5f5";
+                predClockUnit.classList.add('warning-pulse');
+            } else if (timeLeft <= 5) {
+                predClockUnit.classList.add('warning-pulse');
+                predFace.style.borderColor = "var(--color-mid)";
+            } else {
+                predFace.style.borderColor = "#334155";
+            }
+
+            if (shouldSave) {
+                saveToStorage();
+            }
+        }
+
+        function format12hPure(h, m) {
+            let displayH = h % 12;
+            if (displayH === 0) displayH = 12;
+            return `${displayH}:${String(m).padStart(2, '0')}`;
+        }
+
+        function updateClock(prefix, time) {
+            const hDeg = (time.h % 12) * 30 + (time.m / 60) * 30;
+            const mDeg = time.m * 6;
+            document.getElementById(prefix + 'Hour').style.transform = `translateX(-50%) rotate(${hDeg}deg)`;
+            document.getElementById(prefix + 'Min').style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+            const digi = document.getElementById(prefix + 'Digital');
+            if (digi) digi.innerText = format12hPure(time.h, time.m);
+        }
+
+        window.onresize = () => updateUI(false);
+    </script>
+</body>
+</html>
