@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ぱっかん！トントン！お野菜ゲーム</title>
+    <style>
+        :root {
+            --bg-color: #FFF9C4;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: sans-serif;
+            /* ズームとスクロールの徹底防止 */
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.8s ease;
+        }
+
+        #game-canvas {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .item-wrapper {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            /* 割れた後の消去アニメーション */
+            transition: opacity 0.5s ease-out;
+        }
+
+        .visual-group {
+            position: relative;
+            display: flex;
+            font-size: 110px; /* 少し大きくして見やすく */
+        }
+
+        .half {
+            display: inline-block;
+            transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.2, 1);
+        }
+
+        .left-half {
+            clip-path: inset(0 50% 0 0);
+            position: absolute;
+            left: 0;
+        }
+
+        .right-half {
+            clip-path: inset(0 0 0 50%);
+        }
+
+        /* 割れた時の動き */
+        .is-split .left-half {
+            transform: translateX(-60px) rotate(-20deg);
+        }
+
+        .is-split .right-half {
+            transform: translateX(60px) rotate(20deg);
+        }
+
+        /* 中身の出現 */
+        .surprise-content {
+            position: absolute;
+            font-size: 0.8em;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .is-split .surprise-content {
+            animation: popOut 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 1;
+        }
+
+        @keyframes popOut {
+            0% { transform: scale(0) translateY(0); }
+            100% { transform: scale(1.3) translateY(-80px); }
+        }
+
+        /* キラキラ粒子 */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 24px;
+            animation: particleAnim 0.7s ease-out forwards;
+        }
+
+        @keyframes particleAnim {
+            0% { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+        }
+
+        /* 大きいサイズ用 */
+        .big-item .visual-group { font-size: 280px; }
+        .big-item.is-split .left-half { transform: translateX(-120px) rotate(-20deg); }
+        .big-item.is-split .right-half { transform: translateX(120px) rotate(20deg); }
+
+        /* 消える際のアニメーション */
+        .fade-out { opacity: 0; }
+    </style>
+</head>
+<body>
+
+<div id="game-canvas"></div>
+
+<script>
+    const canvas = document.getElementById('game-canvas');
+    const items = ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍑', '🍈', '🍒', '🍅', '🍆', '🌽', '🥕', '🥦'];
+    const surprises = ['🐶', '🐱', '🐰', '🦁', '🐸', '🐼', '🚗', '🚑', '🚒', '🚀', '✈️', '🚁', '🧸', '🐣', '🦖'];
+    const bgColors = ['#FFF9C4', '#F0F4C3', '#E1F5FE', '#FCE4EC', '#F3E5F5'];
+
+    let audioCtx = null;
+
+    // 「ポーン！」という上昇音に戻す
+    function playPopSound() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.3);
+    }
+
+    function createStage() {
+        canvas.innerHTML = '';
+        document.body.style.backgroundColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+
+        const isBigMode = Math.random() < 0.2;
+        const count = isBigMode ? 1 : Math.floor(Math.random() * 4) + 2; // 2〜5個
+
+        // グリッドの作成: 画面を3x3程度のエリアに分け、間隔を広く取る
+        const slots = [
+            {x: 25, y: 25}, {x: 50, y: 25}, {x: 75, y: 25},
+            {x: 25, y: 50}, {x: 50, y: 50}, {x: 75, y: 50},
+            {x: 25, y: 75}, {x: 50, y: 75}, {x: 75, y: 75}
+        ];
+
+        // ランダムにスロットを選択（重なり防止）
+        const shuffledSlots = slots.sort(() => Math.random() - 0.5);
+
+        for (let i = 0; i < count; i++) {
+            const pos = isBigMode ? {x: 50, y: 50} : shuffledSlots[i];
+            // 少しだけ位置をランダムにずらして自然に見せる
+            if (!isBigMode) {
+                pos.x += (Math.random() - 0.5) * 10;
+                pos.y += (Math.random() - 0.5) * 10;
+            }
+            createItem(isBigMode, pos);
+        }
+    }
+
+    function createItem(isBig, pos) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'item-wrapper';
+        if (isBig) wrapper.classList.add('big-item');
+
+        wrapper.style.left = `${pos.x}%`;
+        wrapper.style.top = `${pos.y}%`;
+
+        const emoji = items[Math.floor(Math.random() * items.length)];
+        const hasSurprise = Math.random() < 0.7; // サプライズ率を少しアップ
+        const surpriseEmoji = surprises[Math.floor(Math.random() * surprises.length)];
+
+        wrapper.innerHTML = `
+            <div class="visual-group">
+                <div class="surprise-content">${hasSurprise ? surpriseEmoji : ''}</div>
+                <div class="half left-half">${emoji}</div>
+                <div class="half right-half">${emoji}</div>
+            </div>
+        `;
+
+        const handleInteraction = (e) => {
+            e.preventDefault();
+            if (wrapper.classList.contains('is-split')) return;
+
+            playPopSound();
+            wrapper.classList.add('is-split');
+            createParticles(wrapper);
+
+            // 1.5秒後に消去
+            setTimeout(() => {
+                wrapper.classList.add('fade-out');
+                setTimeout(() => {
+                    wrapper.remove();
+                    if (document.querySelectorAll('.item-wrapper').length === 0) {
+                        createStage();
+                    }
+                }, 500);
+            }, 1500);
+        };
+
+        wrapper.addEventListener('touchstart', handleInteraction, {passive: false});
+        wrapper.addEventListener('mousedown', handleInteraction);
+
+        canvas.appendChild(wrapper);
+    }
+
+    function createParticles(parent) {
+        const icons = ['✨', '🌟', '🎊'];
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.innerText = icons[Math.floor(Math.random() * icons.length)];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 70 + Math.random() * 100;
+            p.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+            p.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+            p.style.left = '50%';
+            p.style.top = '50%';
+            parent.appendChild(p);
+            setTimeout(() => p.remove(), 700);
+        }
+    }
+
+    // ズーム徹底防止
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    let lastTouchTime = 0;
+    document.addEventListener('touchstart', (e) => {
+        const now = Date.now();
+        if (now - lastTouchTime < 300) e.preventDefault();
+        lastTouchTime = now;
+    }, { passive: false });
+
+    window.onload = createStage;
+</script>
+</body>
+</html>

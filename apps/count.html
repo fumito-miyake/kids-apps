@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>おかねのけいさん</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #f0fdf4;
+            touch-action: manipulation;
+        }
+
+        .coin {
+            transition: transform 0.1s active;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1), inset 0 -4px 0 rgba(0,0,0,0.1);
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .coin:active {
+            transform: scale(0.95) translateY(4px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1), inset 0 -2px 0 rgba(0,0,0,0.1);
+        }
+
+        .coin-1 { background-color: #e2e8f0; border: 4px solid #cbd5e1; color: #64748b; }
+        .coin-5 { background-color: #fbbf24; border: 4px solid #f59e0b; color: #92400e; position: relative; }
+        .coin-5::after { content: ""; position: absolute; width: 14px; height: 14px; background: #f0fdf4; border: 2px solid #f59e0b; border-radius: 50%; top: 30%; left: 50%; transform: translate(-50%, -50%); }
+        .coin-5 .val { margin-top: 15px; }
+
+        .coin-10 { background-color: #f97316; border: 4px solid #ea580c; color: #7c2d12; }
+        .coin-50 { background-color: #f1f5f9; border: 4px solid #94a3b8; color: #475569; position: relative; } 
+        .coin-50::after { content: ""; position: absolute; width: 14px; height: 14px; background: #f0fdf4; border: 2px solid #94a3b8; border-radius: 50%; top: 30%; left: 50%; transform: translate(-50%, -50%); }
+        .coin-50 .val { margin-top: 15px; }
+
+        .coin-100 { background-color: #f1f5f9; border: 4px solid #94a3b8; color: #475569; }
+        .coin-500 { background-color: #fde68a; border: 4px solid #d97706; color: #92400e; }
+        .bill-1000 { background-color: #dcfce7; border: 4px solid #22c55e; color: #166534; border-radius: 12px; }
+        .bill-10000 { background-color: #fef3c7; border: 4px solid #f59e0b; color: #b45309; border-radius: 12px; }
+
+        .count-badge {
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 999px;
+            min-width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.7rem;
+            border: 3px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .minus-btn {
+            background-color: white;
+            border: 2px solid #d1d5db;
+            color: #4b5563;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 0.875rem;
+            margin-top: 12px;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.05);
+            transition: all 0.1s;
+        }
+        .minus-btn:active {
+            background-color: #f3f4f6;
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="p-4 select-none">
+
+    <div class="max-w-md mx-auto">
+        <div class="text-center mb-4">
+            <h1 class="text-3xl font-black text-green-700 mb-1">おかねの けいさん</h1>
+            <p class="text-green-600 font-bold">おかねを タッチしてね！</p>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 shadow-xl mb-6 border-4 border-green-400 text-center">
+            <div class="text-gray-500 text-lg font-bold mb-1">ぜんぶで...</div>
+            <div id="total-display" class="text-5xl font-black text-orange-500 mb-4">0 えん</div>
+            <button onclick="speakTotal()" id="speak-btn" class="bg-blue-500 hover:bg-blue-600 text-white rounded-full px-10 py-3 font-bold shadow-md flex items-center justify-center mx-auto gap-2 text-xl active:scale-95 transition-transform">
+                <span>🔊 きく</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-x-8 gap-y-12 mb-8 px-2">
+            <!-- 500円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-500" class="count-badge hidden">0</div>
+                <div onclick="changeCount('500', 1)" class="coin coin-500 w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black">500</div>
+                <button onclick="changeCount('500', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 100円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-100" class="count-badge hidden">0</div>
+                <div onclick="changeCount('100', 1)" class="coin coin-100 w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black">100</div>
+                <button onclick="changeCount('100', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 50円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-50" class="count-badge hidden">0</div>
+                <div onclick="changeCount('50', 1)" class="coin coin-50 w-24 h-24 rounded-full flex items-center justify-center text-2xl font-black">
+                    <span class="val">50</span>
+                </div>
+                <button onclick="changeCount('50', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 10円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-10" class="count-badge hidden">0</div>
+                <div onclick="changeCount('10', 1)" class="coin coin-10 w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black">10</div>
+                <button onclick="changeCount('10', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 5円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-5" class="count-badge hidden">0</div>
+                <div onclick="changeCount('5', 1)" class="coin coin-5 w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black">
+                    <span class="val">5</span>
+                </div>
+                <button onclick="changeCount('5', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 1円 -->
+            <div class="relative flex flex-col items-center">
+                <div id="badge-1" class="count-badge hidden">0</div>
+                <div onclick="changeCount('1', 1)" class="coin coin-1 w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black">1</div>
+                <button onclick="changeCount('1', -1)" class="minus-btn">へらす</button>
+            </div>
+
+            <!-- 1000円札 -->
+            <div class="relative flex flex-col items-center col-span-2 mt-2">
+                <div id="badge-1000" class="count-badge hidden">0</div>
+                <div onclick="changeCount('1000', 1)" class="coin bill-1000 w-full h-24 flex items-center justify-center text-4xl font-black italic">1000</div>
+                <button onclick="changeCount('1000', -1)" class="minus-btn px-12">へらす</button>
+            </div>
+
+            <!-- 10000円札 -->
+            <div class="relative flex flex-col items-center col-span-2 mt-2">
+                <div id="badge-10000" class="count-badge hidden">0</div>
+                <div onclick="changeCount('10000', 1)" class="coin bill-10000 w-full h-24 flex items-center justify-center text-4xl font-black italic">10000</div>
+                <button onclick="changeCount('10000', -1)" class="minus-btn px-12">へらす</button>
+            </div>
+        </div>
+
+        <button onclick="resetAll()" class="w-full bg-red-100 text-red-600 font-bold py-5 rounded-2xl border-2 border-red-200 active:bg-red-200 transition-colors mb-12 text-lg">
+            ぜんぶ 0 に する
+        </button>
+    </div>
+
+    <script>
+        const counts = {
+            '10000': 0, '1000': 0, '500': 0, '100': 0, '50': 0, '10': 0, '5': 0, '1': 0
+        };
+
+        function updateDisplay() {
+            let total = 0;
+            for (const [value, count] of Object.entries(counts)) {
+                total += parseInt(value) * count;
+                const badge = document.getElementById(`badge-${value}`);
+                if (badge) {
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            }
+            document.getElementById('total-display').innerText = total.toLocaleString() + ' えん';
+        }
+
+        function changeCount(value, delta) {
+            counts[value] = Math.max(0, counts[value] + delta);
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate(delta > 0 ? 30 : 15);
+            }
+            updateDisplay();
+        }
+
+        function resetAll() {
+            for (const key in counts) counts[key] = 0;
+            updateDisplay();
+        }
+
+        function speakTotal() {
+            const synth = window.speechSynthesis;
+            if (!synth) return;
+
+            const totalText = document.getElementById('total-display').innerText;
+            const speechText = totalText.replace(/,/g, '');
+            
+            const UtteranceClass = window.SpeechSynthesisUtterance;
+            if (!UtteranceClass) return;
+
+            const msg = new UtteranceClass('ぜんぶで、' + speechText + 'です。');
+            msg.lang = 'ja-JP';
+            msg.rate = 0.9;
+            
+            synth.cancel();
+            synth.speak(msg);
+        }
+
+        window.addEventListener('DOMContentLoaded', updateDisplay);
+    </script>
+</body>
+</html>
+

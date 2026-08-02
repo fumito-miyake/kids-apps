@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>くるまのめいろ</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #fef3c7;
+            --wall-color: #4b5563;
+            --path-color: #ffffff;
+            --primary: #3b82f6;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            touch-action: none;
+            padding-top: 10px;
+        }
+
+        #header {
+            margin-bottom: 5px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .difficulty-container {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 8px;
+            margin-bottom: 10px;
+        }
+
+        .diff-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid #cbd5e1;
+            background: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 0 #cbd5e1;
+        }
+
+        .diff-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: #1d4ed8;
+            transform: scale(1.1);
+            box-shadow: 0 4px 0 #1d4ed8;
+        }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            border: 6px solid #d1d5db;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.92);
+            z-index: 10;
+        }
+
+        #ui-overlay {
+            display: none;
+        }
+
+        #start-overlay {
+            display: flex;
+        }
+
+        .win-message {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ef4444;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .start-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.1s;
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-green {
+            background: #22c55e;
+            box-shadow: 0 5px 0 #16a34a;
+        }
+
+        .btn-blue {
+            background: #3b82f6;
+            box-shadow: 0 5px 0 #2563eb;
+        }
+
+        .btn-orange {
+            background: #f97316;
+            box-shadow: 0 5px 0 #c2410c;
+            font-size: 1.3rem;
+            padding: 16px 32px;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        #footer {
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <h1 style="margin:0; color: #1e293b; font-size: 1.2rem;">🚗 くるまのめいろ</h1>
+        <div style="font-size: 0.8rem; color: #64748b;">むずかしさを えらんでね</div>
+        <div class="difficulty-container">
+            <button class="diff-btn active" data-level="1" onclick="setDifficulty(1)">1</button>
+            <button class="diff-btn" data-level="2" onclick="setDifficulty(2)">2</button>
+            <button class="diff-btn" data-level="3" onclick="setDifficulty(3)">3</button>
+            <button class="diff-btn" data-level="4" onclick="setDifficulty(4)">4</button>
+            <button class="diff-btn" data-level="5" onclick="setDifficulty(5)">5</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="mazeCanvas"></canvas>
+        
+        <!-- 初回スタート画面 -->
+        <div id="start-overlay" class="overlay-screen">
+            <div class="start-title">🚗 めいろであそぼう！</div>
+            <button class="btn btn-orange" onclick="createAndStartMaze()">
+                🎮 めいろをつくる
+            </button>
+        </div>
+
+        <!-- ゴール画面 -->
+        <div id="ui-overlay" class="overlay-screen">
+            <div class="win-message">やったー！<br>ゴールだよ！ 🚩✨</div>
+            <button class="btn btn-green" onclick="createAndStartMaze()">もういっかい！</button>
+        </div>
+    </div>
+
+    <div id="footer">
+        <button class="btn btn-blue" onclick="createAndStartMaze()">
+            🔄 あたらしくつくる
+        </button>
+    </div>
+
+<script>
+    const canvas = document.getElementById('mazeCanvas');
+    const ctx = canvas.getContext('2d');
+    const startOverlay = document.getElementById('start-overlay');
+    const uiOverlay = document.getElementById('ui-overlay');
+    
+    let currentLevel = 1;
+    let COLS = 11; 
+    let ROWS = 11; 
+    let cellSize = 0;
+    
+    let maze = [];
+    let player = { x: 1, y: 1, color: '#ff0000' };
+    let goal = { x: 0, y: 0 };
+    let obstacles = [];
+    let isGameActive = false;
+    let isFirstTime = true; // 初回判定フラグ
+
+    const animals = ['🐱', '🐶', '🐰', '🐻', '🦁', '🐘'];
+    const carColors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+    window.onload = () => {
+        initSize();
+        drawEmptyBoard(); // 初回のみ空背景を表示
+        
+        window.addEventListener('resize', () => {
+            initSize();
+            if (isGameActive) {
+                draw();
+            } else if (isFirstTime) {
+                drawEmptyBoard();
+            }
+        });
+        
+        window.addEventListener('keydown', handleKeydown);
+        
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!isGameActive) return;
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+            
+            const dx = touchEndX - touchStartX;
+            const dy = touchEndY - touchStartY;
+            const threshold = 18;
+
+            if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    movePlayer(dx > 0 ? 1 : -1, 0);
+                } else {
+                    movePlayer(0, dy > 0 ? 1 : -1);
+                }
+                touchStartX = touchEndX;
+                touchStartY = touchEndY;
+            }
+            e.preventDefault();
+        }, { passive: false });
+    };
+
+    function setDifficulty(level) {
+        currentLevel = parseInt(level);
+        const sizes = [0, 11, 15, 21, 27, 35];
+        COLS = ROWS = sizes[currentLevel];
+        
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.dataset.level == level) btn.classList.add('active');
+        });
+        
+        initSize();
+
+        // 初回画面が表示中の場合はすぐに迷路を生成、それ以外の場合も即生成
+        createAndStartMaze();
+    }
+
+    function initSize() {
+        const padding = 20;
+        const headerH = document.getElementById('header').offsetHeight;
+        const footerH = document.getElementById('footer').offsetHeight;
+        const availableHeight = window.innerHeight - headerH - footerH - 60;
+        const availableWidth = Math.min(window.innerWidth - padding, 450);
+        
+        cellSize = Math.floor(Math.min(availableWidth, availableHeight) / COLS);
+        canvas.width = cellSize * COLS;
+        canvas.height = cellSize * ROWS;
+    }
+
+    function createAndStartMaze() {
+        isFirstTime = false; // 初回フラグを下げる
+        startOverlay.style.display = 'none';
+        uiOverlay.style.display = 'none';
+        
+        goal = { x: COLS - 2, y: ROWS - 2 };
+        
+        // 迷路の初期化
+        maze = Array.from({ length: ROWS }, () => Array(COLS).fill(1));
+        
+        // 基本の迷路生成
+        generateMaze(1, 1);
+
+        // 難易度4以上は分かれ道（ループ）を増やす
+        if (currentLevel >= 4) {
+            addBranchingPaths();
+        }
+        
+        maze[1][1] = 0;
+        maze[goal.y][goal.x] = 0;
+        
+        player.x = 1;
+        player.y = 1;
+        player.color = carColors[Math.floor(Math.random() * carColors.length)];
+        
+        placeObstacles();
+        
+        isGameActive = true;
+        draw();
+    }
+
+    function drawEmptyBoard() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function generateMaze(x, y) {
+        maze[y][x] = 0;
+        const dirs = [[0, -2], [0, 2], [-2, 0], [2, 0]].sort(() => Math.random() - 0.5);
+
+        for (let [dx, dy] of dirs) {
+            let nx = x + dx;
+            let ny = y + dy;
+            if (nx > 0 && nx < COLS - 1 && ny > 0 && ny < ROWS - 1 && maze[ny][nx] === 1) {
+                maze[y + dy / 2][x + dx / 2] = 0;
+                generateMaze(nx, ny);
+            }
+        }
+    }
+
+    function addBranchingPaths() {
+        const breakCount = currentLevel === 5 ? 25 : 10;
+        let attempts = 0;
+        let broken = 0;
+        
+        while (broken < breakCount && attempts < 100) {
+            attempts++;
+            let rx = Math.floor(Math.random() * (COLS - 2)) + 1;
+            let ry = Math.floor(Math.random() * (ROWS - 2)) + 1;
+            
+            if (maze[ry][rx] === 1) {
+                const horizontal = maze[ry][rx-1] === 0 && maze[ry][rx+1] === 0;
+                const vertical = maze[ry-1][rx] === 0 && maze[ry+1][rx] === 0;
+                
+                if (horizontal || vertical) {
+                    maze[ry][rx] = 0;
+                    broken++;
+                }
+            }
+        }
+    }
+
+    function placeObstacles() {
+        obstacles = [];
+        const path = findBFSPath(1, 1, goal.x, goal.y);
+        const pathSet = new Set(path.map(p => `${p.x},${p.y}`));
+
+        let candidates = [];
+        for (let y = 1; y < ROWS - 1; y++) {
+            for (let x = 1; x < COLS - 1; x++) {
+                if (maze[y][x] === 0 && !pathSet.has(`${x},${y}`) && !(x === 1 && y === 1)) {
+                    candidates.push({ x, y });
+                }
+            }
+        }
+
+        candidates.sort(() => Math.random() - 0.5);
+        const count = Math.min(candidates.length, 2 + currentLevel);
+        for (let i = 0; i < count; i++) {
+            obstacles.push({
+                x: candidates[i].x,
+                y: candidates[i].y,
+                emoji: animals[Math.floor(Math.random() * animals.length)]
+            });
+        }
+    }
+
+    function findBFSPath(sx, sy, gx, gy) {
+        let queue = [[{x: sx, y: sy}]];
+        let visited = new Set([`${sx},${sy}`]);
+        while(queue.length > 0) {
+            let path = queue.shift();
+            let last = path[path.length - 1];
+            if(last.x === gx && last.y === gy) return path;
+            
+            const neighbors = [[0,1],[0,-1],[1,0],[-1,0]];
+            for(let [dx, dy] of neighbors) {
+                let nx = last.x + dx, ny = last.y + dy;
+                if(nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && maze[ny][nx] === 0 && !visited.has(`${nx},${ny}`)) {
+                    visited.add(`${nx},${ny}`);
+                    queue.push([...path, {x: nx, y: ny}]);
+                }
+            }
+        }
+        return [];
+    }
+
+    function movePlayer(dx, dy) {
+        if (!isGameActive) return;
+        let nx = player.x + dx;
+        let ny = player.y + dy;
+
+        if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && maze[ny][nx] === 0) {
+            if (!obstacles.some(o => o.x === nx && o.y === ny)) {
+                player.x = nx;
+                player.y = ny;
+                draw();
+                if (player.x === goal.x && player.y === goal.y) win();
+            }
+        }
+    }
+
+    function handleKeydown(e) {
+        if (e.key === 'ArrowUp') movePlayer(0, -1);
+        if (e.key === 'ArrowDown') movePlayer(0, 1);
+        if (e.key === 'ArrowLeft') movePlayer(-1, 0);
+        if (e.key === 'ArrowRight') movePlayer(1, 0);
+    }
+
+    function win() {
+        isGameActive = false;
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        setTimeout(() => { uiOverlay.style.display = 'flex'; }, 500);
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                if (maze[y][x] === 1) {
+                    ctx.fillStyle = '#4b5563';
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    ctx.fillStyle = '#6b7280';
+                    const s = Math.max(1, cellSize / 6);
+                    ctx.fillRect(x * cellSize + s, y * cellSize + s, cellSize - s*2, cellSize - s*2);
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+
+        ctx.font = `${cellSize * 0.7}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🚩', goal.x * cellSize + cellSize / 2, goal.y * cellSize + cellSize / 2);
+
+        obstacles.forEach(o => {
+            ctx.fillText(o.emoji, o.x * cellSize + cellSize / 2, o.y * cellSize + cellSize / 2);
+        });
+
+        drawBetterCar(player.x * cellSize + cellSize / 2, player.y * cellSize + cellSize / 2, cellSize * 0.7, player.color);
+    }
+
+    function drawBetterCar(px, py, size, color) {
+        ctx.save();
+        ctx.translate(px, py);
+        
+        // シャーシ
+        ctx.fillStyle = color;
+        ctx.fillRect(-size/2, -size/10, size, size/3);
+        
+        // キャビン
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.fillRect(-size/4, -size/3, size/2, size/4);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(-size/4, -size/3, size/2, size/4);
+
+        // タイヤ
+        ctx.fillStyle = '#000';
+        const wheelSize = size/6;
+        ctx.beginPath();
+        ctx.arc(-size/3, size/4, wheelSize, 0, Math.PI*2);
+        ctx.arc(size/3, size/4, wheelSize, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+</script>
+</body>
+</html>

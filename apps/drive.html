@@ -1,0 +1,647 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>くるまのドライブゲーム</title>
+    <style>
+        :root {
+            --road-color: #555;
+            --grass-color: #7cfc00;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+            background-color: var(--grass-color);
+            touch-action: none;
+            user-select: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--grass-color);
+            display: flex;
+            justify-content: center;
+        }
+        #road {
+            position: relative;
+            width: 300px;
+            height: 100%;
+            background-color: var(--road-color);
+            border-left: 10px solid white;
+            border-right: 10px solid white;
+            overflow: visible; /* 信号や踏切がはみ出しても表示されるように設定 */
+        }
+        /* 中央線専用の領域（道路の中央部分だけに配置） */
+        #road-marks {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 100%;
+            background-image: linear-gradient(to bottom, white 50%, transparent 50%);
+            background-size: 8px 80px;
+            background-position: center 0px;
+            z-index: 1;
+            pointer-events: none;
+        }
+        #car {
+            position: absolute;
+            bottom: 80px;
+            left: 125px;
+            width: 50px;
+            height: 80px;
+            z-index: 10;
+        }
+        .ui-top {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+        #speedometer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 110;
+            min-width: 80px;
+            text-align: center;
+        }
+        .controls-container {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            box-sizing: border-box;
+            pointer-events: none;
+            z-index: 110;
+        }
+        .side-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            box-shadow: 0 5px rgba(0,0,0,0.2);
+        }
+        #btn-brake { background: #ff4444; }
+        #btn-accel { background: #4444ff; }
+        
+        button.color-btn {
+            padding: 12px 24px;
+            font-size: 20px;
+            border-radius: 30px;
+            border: none;
+            background: white;
+            box-shadow: 0 4px #ccc;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .obstacle, .helper {
+            position: absolute;
+            width: 50px;
+            z-index: 5;
+        }
+        
+        .signal-container, .railroad-container {
+            position: absolute;
+            width: 300px;
+            height: 120px;
+            z-index: 15; /* 車や中央線より手前に設定して確実に表示させる */
+            left: 0;
+            overflow: visible;
+        }
+
+        .crosswalk, .rail-track {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: space-around;
+            pointer-events: none;
+            z-index: 1; 
+        }
+
+        .crosswalk-line {
+            width: 20px;
+            height: 100%;
+            background-color: white;
+            opacity: 0.8;
+        }
+
+        .rail-track {
+            background: repeating-linear-gradient(90deg, #333, #333 10px, #666 10px, #666 20px);
+            height: 40px;
+            top: 50px;
+            border-top: 4px solid #222;
+            border-bottom: 4px solid #222;
+        }
+
+        .crossing-bar {
+            position: absolute;
+            left: -10px;
+            top: 45px;
+            width: 320px;
+            height: 10px;
+            background: repeating-linear-gradient(45deg, #000, #000 10px, #ff0 10px, #ff0 20px);
+            z-index: 25;
+            transform-origin: left center;
+            transition: transform 1s ease-in-out;
+            transform: rotate(-90deg);
+        }
+        .crossing-bar.closed {
+            transform: rotate(0deg);
+        }
+
+        .train {
+            position: absolute;
+            top: 45px;
+            left: 400px;
+            font-size: 40px;
+            white-space: nowrap;
+            z-index: 26;
+            transition: left 2s linear;
+        }
+
+        .signal-pole {
+            position: absolute;
+            left: -20px; 
+            top: 0;
+            width: 8px;
+            height: 120px;
+            background: #777;
+            z-index: 20;
+        }
+        .signal-head {
+            position: absolute;
+            left: -55px; 
+            top: 0;
+            width: 40px;
+            height: 80px;
+            background: #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 5px 0;
+            border: 2px solid #222;
+            z-index: 21; 
+        }
+        .light {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #111;
+        }
+        .light.red { background: #ff0000; box-shadow: 0 0 20px #ff0000; }
+        .light.blue { background: #00ff00; box-shadow: 0 0 20px #00ff00; }
+        
+        #message-box {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px 10px;
+            border-radius: 50px;
+            text-align: center;
+            display: none;
+            z-index: 200;
+            font-size: 28px;
+            font-weight: bold;
+            border: 6px solid #ffaa00;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: nowrap;
+        }
+
+        .explosion {
+            position: absolute;
+            font-size: 300px;
+            z-index: 50;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: explode-anim 1.0s ease-out forwards;
+        }
+
+        @keyframes explode-anim {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            50% { opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+        }
+
+        .car-svg { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="road">
+        <div id="road-marks"></div>
+        <div id="car">
+            <svg class="car-svg" viewBox="0 0 100 160">
+                <rect id="car-body" x="10" y="10" width="80" height="140" rx="15" fill="red" />
+                <rect x="20" y="30" width="60" height="30" rx="5" fill="#add8e6" />
+                <rect x="15" y="120" width="20" height="10" rx="2" fill="yellow" />
+                <rect x="65" y="120" width="20" height="10" rx="2" fill="yellow" />
+                <rect x="5" y="30" width="10" height="30" rx="2" fill="black" />
+                <rect x="85" y="30" width="10" height="30" rx="2" fill="black" />
+                <rect x="5" y="110" width="10" height="30" rx="2" fill="black" />
+                <rect x="85" y="110" width="10" height="30" rx="2" fill="black" />
+            </svg>
+        </div>
+        <div id="objects-container"></div>
+    </div>
+
+    <div class="ui-top">
+        <button class="color-btn" onclick="changeCarColor()">いろをかえる</button>
+    </div>
+
+    <div id="speedometer">スピード<br><span id="speed-val">0</span> km/h</div>
+
+    <div class="controls-container">
+        <div id="btn-brake" class="side-btn">ぶれーき</div>
+        <div id="btn-accel" class="side-btn">あくせる</div>
+    </div>
+
+    <div id="message-box"></div>
+</div>
+
+<script>
+    const road = document.getElementById('road');
+    const car = document.getElementById('car');
+    const carBody = document.getElementById('car-body');
+    const objectsContainer = document.getElementById('objects-container');
+    const roadMarks = document.getElementById('road-marks');
+    const messageBox = document.getElementById('message-box');
+    const speedVal = document.getElementById('speed-val');
+
+    let audioCtx = null;
+    let carX = 125;
+    const roadWidth = 300;
+    const carWidth = 50;
+    let gameActive = true;
+    let speed = 4;
+    let targetSpeed = 4;
+    const NORMAL_SPEED = 4;
+    const MAX_SPEED = 30;
+    let linePosition = 0;
+    let colors = ['red', 'blue', 'orange', 'pink', 'green', 'purple', 'yellow', 'cyan', 'lime', 'gold'];
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playCarHornSound() {
+        initAudio();
+        const playTone = (delay) => {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(400, audioCtx.currentTime + delay);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime + delay);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.15);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.start(audioCtx.currentTime + delay);
+            oscillator.stop(audioCtx.currentTime + delay + 0.15);
+        };
+        playTone(0);
+        playTone(0.2);
+    }
+
+    function playCrossingBell() {
+        initAudio();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(700, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function init() {
+        changeCarColor();
+        requestAnimationFrame(gameLoop);
+        setInterval(spawnObject, 3000);
+        
+        const btnAccel = document.getElementById('btn-accel');
+        const btnBrake = document.getElementById('btn-brake');
+        
+        const setTargetSpeed = (s) => { 
+            initAudio();
+            if(gameActive) targetSpeed = s; 
+        };
+        
+        btnAccel.addEventListener('touchstart', (e) => { e.preventDefault(); setTargetSpeed(MAX_SPEED); });
+        btnAccel.addEventListener('touchend', (e) => { e.preventDefault(); setTargetSpeed(NORMAL_SPEED); });
+        btnAccel.addEventListener('mousedown', () => setTargetSpeed(MAX_SPEED));
+        btnAccel.addEventListener('mouseup', () => setTargetSpeed(NORMAL_SPEED));
+        
+        btnBrake.addEventListener('touchstart', (e) => { e.preventDefault(); setTargetSpeed(0); });
+        btnBrake.addEventListener('touchend', (e) => { e.preventDefault(); setTargetSpeed(NORMAL_SPEED); });
+        btnBrake.addEventListener('mousedown', () => setTargetSpeed(0));
+        btnBrake.addEventListener('mouseup', () => setTargetSpeed(NORMAL_SPEED));
+
+        document.addEventListener('click', initAudio, { once: true });
+        document.addEventListener('touchstart', initAudio, { once: true });
+    }
+
+    function moveRoad() {
+        let factor;
+        if (targetSpeed > speed) {
+            factor = 0.03; 
+        } else if (targetSpeed === 0) {
+            factor = 0.15; 
+        } else {
+            factor = 0.015; 
+        }
+        
+        speed += (targetSpeed - speed) * factor;
+        if (speed < 0.1) speed = 0;
+        
+        speedVal.innerText = Math.floor(speed * 10);
+
+        // 中央線を上から下へ滑らかにスクロールさせる
+        linePosition = (linePosition + speed) % 80;
+        roadMarks.style.backgroundPosition = `center ${linePosition}px`;
+    }
+
+    function changeCarColor() {
+        const newColor = colors[Math.floor(Math.random() * colors.length)];
+        carBody.setAttribute('fill', newColor);
+    }
+
+    function playSound(text) {
+        initAudio();
+        if ('speechSynthesis' in window) {
+            const uttr = new SpeechSynthesisUtterance(text);
+            uttr.lang = 'ja-JP';
+            uttr.rate = 1.5;
+            speechSynthesis.speak(uttr);
+        }
+    }
+
+    function createExplosion(x, y) {
+        const boom = document.createElement('div');
+        boom.className = 'explosion';
+        boom.innerText = '💥';
+        boom.style.left = x + 'px';
+        boom.style.top = y + 'px';
+        document.body.appendChild(boom);
+        setTimeout(() => boom.remove(), 1000);
+    }
+
+    let startX = 0;
+    document.addEventListener('touchstart', (e) => {
+        if(e.target.classList.contains('side-btn')) return;
+        startX = e.touches[0].clientX;
+    });
+
+    document.addEventListener('touchmove', (e) => {
+        if (!gameActive || e.target.classList.contains('side-btn')) return;
+        const currentX = e.touches[0].clientX;
+        const diff = currentX - startX;
+        carX += diff * 0.8;
+        if (carX < 10) carX = 10;
+        if (carX > roadWidth - carWidth - 10) carX = roadWidth - carWidth - 10;
+        car.style.left = carX + 'px';
+        startX = currentX;
+    });
+
+    let isMouseDown = false;
+    document.addEventListener('mousedown', (e) => {
+        if(e.target.classList.contains('side-btn')) return;
+        isMouseDown = true;
+        startX = e.clientX;
+    });
+    document.addEventListener('mousemove', (e) => {
+        if (!isMouseDown || !gameActive) return;
+        const diff = e.clientX - startX;
+        carX += diff;
+        if (carX < 10) carX = 10;
+        if (carX > roadWidth - carWidth - 10) carX = roadWidth - carWidth - 10;
+        car.style.left = carX + 'px';
+        startX = e.clientX;
+    });
+    document.addEventListener('mouseup', () => isMouseDown = false);
+
+    function spawnObject() {
+        if (!gameActive || speed < 0.5) return;
+        
+        const typeRoll = Math.random();
+        
+        if (typeRoll < 0.4) {
+            let obj = document.createElement('div');
+            obj.className = 'obstacle';
+            obj.style.left = Math.random() * (roadWidth - 60) + 10 + 'px';
+            obj.style.top = '-150px';
+            
+            if (Math.random() < 0.5) {
+                obj.dataset.type = 'car';
+                const randomCarColor = colors[Math.floor(Math.random() * colors.length)];
+                obj.innerHTML = `
+                    <svg viewBox="0 0 100 160" style="width:50px; height:80px;">
+                        <rect x="10" y="10" width="80" height="140" rx="15" fill="${randomCarColor}" />
+                        <rect x="20" y="30" width="60" height="30" rx="5" fill="#333" />
+                        <rect x="15" y="10" width="20" height="10" rx="2" fill="white" opacity="0.8"/>
+                        <rect x="65" y="10" width="20" height="10" rx="2" fill="white" opacity="0.8"/>
+                    </svg>`;
+            } else {
+                obj.dataset.type = 'rock';
+                obj.innerHTML = `<span style="font-size:50px; filter: brightness(1.5) contrast(0.8);">🪨</span>`;
+            }
+            objectsContainer.appendChild(obj);
+        } else if (typeRoll < 0.7) {
+            let container = document.createElement('div');
+            container.className = 'signal-container';
+            container.style.top = '-200px';
+            container.style.left = '0';
+            container.dataset.type = 'signal';
+            container.dataset.state = Math.random() > 0.5 ? 'blue' : 'red';
+            
+            container.innerHTML = `
+                <div class="crosswalk">
+                    <div class="crosswalk-line"></div><div class="crosswalk-line"></div>
+                    <div class="crosswalk-line"></div><div class="crosswalk-line"></div>
+                    <div class="crosswalk-line"></div>
+                </div>
+                <div class="signal-pole"></div>
+                <div class="signal-head">
+                    <div class="light ${container.dataset.state === 'red' ? 'red' : ''}"></div>
+                    <div class="light ${container.dataset.state === 'blue' ? 'blue' : ''}"></div>
+                </div>`;
+            
+            container.timer = setInterval(() => {
+                const newState = container.dataset.state === 'red' ? 'blue' : 'red';
+                container.dataset.state = newState;
+                const lights = container.querySelectorAll('.light');
+                lights[0].className = 'light' + (newState === 'red' ? ' red' : '');
+                lights[1].className = 'light' + (newState === 'blue' ? ' blue' : '');
+            }, 3000);
+            objectsContainer.appendChild(container);
+        } else {
+            let container = document.createElement('div');
+            container.className = 'railroad-container';
+            container.style.top = '-300px';
+            container.style.left = '0';
+            container.dataset.type = 'railroad';
+            container.dataset.state = 'waiting';
+
+            container.innerHTML = `
+                <div class="rail-track"></div>
+                <div class="crossing-bar"></div>
+                <div class="train">🚃🚃🚃</div>
+                <div class="signal-pole"></div>
+            `;
+            objectsContainer.appendChild(container);
+
+            let bellInterval = setInterval(() => {
+                if(container.parentElement) playCrossingBell();
+            }, 500);
+
+            setTimeout(() => {
+                const bar = container.querySelector('.crossing-bar');
+                if (bar) bar.classList.add('closed');
+                container.dataset.state = 'closed';
+                setTimeout(() => {
+                    const train = container.querySelector('.train');
+                    if (train) train.style.left = '-300px';
+                    setTimeout(() => {
+                        if (bar) bar.classList.remove('closed');
+                        container.dataset.state = 'open';
+                        clearInterval(bellInterval);
+                    }, 2000);
+                }, 1000);
+            }, 1500);
+        }
+    }
+
+    function showMessage(text) {
+        messageBox.innerText = text;
+        messageBox.style.display = 'block';
+        gameActive = false;
+        targetSpeed = 0;
+        speed = 0;
+        setTimeout(() => {
+            messageBox.style.display = 'none';
+            gameActive = true;
+            targetSpeed = NORMAL_SPEED;
+        }, 2000);
+    }
+
+    function spawnHelper(emoji, text, bgColor, textColor = "white") {
+        const helper = document.createElement('div');
+        helper.className = 'helper';
+        helper.style.left = carX + 'px';
+        helper.style.bottom = '-150px';
+        helper.style.transition = 'bottom 1s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        helper.style.zIndex = "50";
+        helper.style.width = "100px";
+        helper.innerHTML = `<div style="text-align:center;"><span style="font-size:60px;">${emoji}</span><br><span style="color:${textColor}; font-size:18px; padding:2px 10px; border-radius:10px; background:${bgColor}; white-space:nowrap; border:1px solid #ccc;">${text}</span></div>`;
+        road.appendChild(helper);
+        setTimeout(() => { helper.style.bottom = '180px'; }, 100);
+        setTimeout(() => { 
+            helper.style.bottom = '120vh';
+            setTimeout(() => helper.remove(), 1000);
+        }, 2500);
+    }
+
+    function checkCollision(obj) {
+        const carRect = car.getBoundingClientRect();
+        const objRect = obj.getBoundingClientRect();
+
+        if (obj.dataset.type === 'signal') {
+            return (carRect.top < objRect.top + 60 && carRect.top > objRect.top + 20 && obj.dataset.state === 'red');
+        }
+
+        if (obj.dataset.type === 'railroad') {
+            return (obj.dataset.state === 'closed' && carRect.top < objRect.top + 60 && carRect.top > objRect.top + 40);
+        }
+
+        return !(carRect.right < objRect.left || carRect.left > objRect.right || carRect.bottom < objRect.top || carRect.top > objRect.bottom);
+    }
+
+    function gameLoop() {
+        if (gameActive) {
+            moveRoad();
+            const objs = document.querySelectorAll('.obstacle, .signal-container, .railroad-container');
+            objs.forEach(obj => {
+                let top = parseFloat(obj.style.top);
+                top += speed;
+                obj.style.top = top + 'px';
+
+                if (checkCollision(obj)) {
+                    const type = obj.dataset.type;
+                    const rect = obj.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    playCarHornSound();
+                    if (type === 'signal') {
+                        clearInterval(obj.timer);
+                        obj.remove();
+                        playSound("きをつけて！あかですよ！");
+                        showMessage("あかですよ！とまりましょう！");
+                        spawnHelper("🚓", "きをつけて！", "red");
+                    } else if (type === 'railroad') {
+                        obj.remove();
+                        playSound("あぶない！ふみきりですよ！");
+                        showMessage("ふみきり！とまりましょう！");
+                        spawnHelper("🚓", "とまって！", "orange");
+                    } else {
+                        obj.remove();
+                        playSound("どかーん！");
+                        createExplosion(centerX, centerY);
+                        showMessage(type === 'car' ? "どん！ぶつかっちゃった！" : "ごつん！なおしてもらおう");
+                        spawnHelper(type === 'car' ? "🚑" : "🚛", type === 'car' ? "だいじょうぶ？" : "なおすよ！", type === 'car' ? "white" : "blue", type === 'car' ? "black" : "white");
+                    }
+                }
+                if (top > window.innerHeight + 200) {
+                    if(obj.timer) clearInterval(obj.timer);
+                    obj.remove();
+                }
+            });
+        }
+        requestAnimationFrame(gameLoop);
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
+

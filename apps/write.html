@@ -1,0 +1,483 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>あいうえお・れんしゅう</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 教科書体に近いフォントを優先指定 */
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
+        
+        :root {
+            /* UDデジタル教科書体、クレー(macOS)、游教科書体などを優先 */
+            --font-kyokasho: "UD Digi Kyokasho N-R", "UD デジタル 教科書体 N-R", "Klee One", "クレー", "YuKyokasho", "游教科書体", "Zen Maru Gothic", serif;
+        }
+
+        body {
+            font-family: var(--font-kyokasho);
+            touch-action: manipulation;
+            background-color: #f0fdf4;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .display-area {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: white;
+            border-bottom: 8px solid #bbf7d0;
+            position: relative;
+        }
+
+        .text-output {
+            word-break: break-all;
+            text-align: center;
+            transition: font-size 0.3s ease;
+            color: #374151;
+            overflow-y: scroll;
+            max-height: 85%;
+            width: 100%;
+            min-height: 1.2em;
+            letter-spacing: 0.15em;
+            padding: 10px;
+            white-space: pre-wrap;
+            font-family: var(--font-kyokasho);
+        }
+
+        .text-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        .text-output::-webkit-scrollbar-thumb {
+            background-color: #bbf7d0;
+            border-radius: 4px;
+        }
+
+        .keyboard-area {
+            background-color: #f0fdf4;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+            max-height: 60%; 
+        }
+
+        .keyboard-scroll-container {
+            overflow-x: scroll;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: row-reverse;
+            gap: 8px;
+            padding-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .keyboard-scroll-container::-webkit-scrollbar {
+            height: 10px;
+        }
+        .keyboard-scroll-container::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 5px;
+        }
+        .keyboard-scroll-container::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 5px;
+        }
+
+        .keyboard-column {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 50px;
+        }
+
+        .half-spacer {
+            min-width: 25px;
+            flex-shrink: 0;
+        }
+
+        .key-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 0 #cbd5e1;
+            transition: all 0.1s;
+            cursor: pointer;
+            user-select: none;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+            font-family: var(--font-kyokasho);
+        }
+
+        .small-char-btn {
+            font-size: 1.05rem;
+        }
+
+        .key-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #cbd5e1;
+        }
+
+        .color-a { background-color: #fee2e2; border: 2px solid #ef4444; }
+        .color-ka { background-color: #ffedd5; border: 2px solid #f97316; }
+        .color-sa { background-color: #fef9c3; border: 2px solid #eab308; }
+        .color-ta { background-color: #dcfce7; border: 2px solid #22c55e; }
+        .color-na { background-color: #d1fae5; border: 2px solid #10b981; }
+        .color-ha { background-color: #e0f2fe; border: 2px solid #0ea5e9; }
+        .color-ma { background-color: #e0e7ff; border: 2px solid #6366f1; }
+        .color-ya { background-color: #f5f3ff; border: 2px solid #8b5cf6; }
+        .color-ra { background-color: #fae8ff; border: 2px solid #d946ef; }
+        .color-wa { background-color: #f1f5f9; border: 2px solid #64748b; }
+        
+        .special-key {
+            background-color: #f8fafc;
+            border: 2px solid #94a3b8;
+        }
+
+        .delete-btn {
+            background-color: #475569;
+            color: white;
+            border: 2px solid #1e293b;
+            box-shadow: 0 4px 0 #0f172a;
+        }
+
+        .clear-btn {
+            background-color: #94a3b8;
+            color: white;
+            border: 2px solid #64748b;
+            box-shadow: 0 4px 0 #475569;
+        }
+
+        .history-btn {
+            background-color: #64748b;
+            color: white;
+            border: 2px solid #475569;
+            box-shadow: 0 4px 0 #334155;
+        }
+
+        .mode-btn {
+            background-color: #fbbf24;
+            color: white;
+            border: 2px solid #d97706;
+            box-shadow: 0 4px 0 #92400e;
+        }
+
+        .size-small { font-size: 2rem; }
+        .size-medium { font-size: 4rem; }
+        .size-large { font-size: 7rem; }
+
+        .size-btn-active {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-color: #1e40af !important;
+            font-weight: bold !important;
+            transform: scale(1.1);
+        }
+
+        .control-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .space-char {
+            color: #e2e8f0;
+            font-size: 0.8em;
+            vertical-align: bottom;
+        }
+
+        #historyModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="display-area">
+        <div id="textDisplay" class="text-output size-medium"></div>
+        
+        <div class="absolute top-4 right-4 flex flex-col gap-2">
+            <button onclick="speakText()" class="bg-blue-500 text-white p-3 rounded-full shadow-lg active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
+        </div>
+
+        <div class="absolute bottom-4 left-4 flex gap-2">
+            <button id="btn-small" onclick="changeSize('small')" class="bg-gray-200 px-2 py-1 rounded border border-gray-400 text-xs">ちいさい</button>
+            <button id="btn-medium" onclick="changeSize('medium')" class="bg-gray-200 px-2 py-1 rounded border border-gray-400 text-xs size-btn-active">ふつう</button>
+            <button id="btn-large" onclick="changeSize('large')" class="bg-gray-200 px-2 py-1 rounded border border-gray-400 text-xs">おおきい</button>
+        </div>
+
+        <div class="absolute bottom-4 right-4">
+            <button id="modeToggle" onclick="toggleMode()" class="mode-btn px-4 py-2 rounded-lg font-bold text-sm">カタカナに かえる</button>
+        </div>
+    </div>
+
+    <div class="keyboard-area">
+        <div class="control-row">
+            <button onclick="deleteChar()" class="delete-btn flex-1 py-2 rounded-lg font-bold">ひとつけす</button>
+            <button onclick="clearAll()" class="clear-btn px-4 py-2 rounded-lg font-bold">ぜんぶ けす</button>
+            <button onclick="openHistory()" class="history-btn px-4 py-2 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </button>
+        </div>
+        
+        <div id="keyboardScrollContainer" class="keyboard-scroll-container">
+            <!-- JSで列を生成 -->
+        </div>
+    </div>
+
+    <div id="historyModal" onclick="closeHistory()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="p-4 border-bottom bg-gray-50 font-bold flex justify-between items-center">
+                <span>まえにかいたもの</span>
+                <button onclick="closeHistory()" class="text-gray-500">✕</button>
+            </div>
+            <div id="historyList" class="overflow-y-auto p-2 flex flex-col gap-2">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentContent = [];
+        let isKatakana = false;
+        const display = document.getElementById('textDisplay');
+        const scrollContainer = document.getElementById('keyboardScrollContainer');
+
+        const groups = [
+            { id: 'a', chars: ['あ', 'い', 'う', 'え', 'お'], color: 'color-a' },
+            { id: 'ka', chars: ['か', 'き', 'く', 'け', 'こ'], color: 'color-ka' },
+            { id: 'sa', chars: ['さ', 'し', 'す', 'せ', 'そ'], color: 'color-sa' },
+            { id: 'ta', chars: ['た', 'ち', 'つ', 'て', 'と'], color: 'color-ta' },
+            { id: 'na', chars: ['な', 'に', 'ぬ', 'ね', 'の'], color: 'color-na' },
+            { id: 'ha', chars: ['は', 'ひ', 'ふ', 'へ', 'ほ'], color: 'color-ha' },
+            { id: 'ma', chars: ['ま', 'み', 'む', 'め', 'も'], color: 'color-ma' },
+            { id: 'ya', chars: ['や', '', 'ゆ', '', 'よ'], color: 'color-ya' },
+            { id: 'ra', chars: ['ら', 'り', 'る', 'れ', 'ろ'], color: 'color-ra' },
+            { id: 'wa', chars: ['わ', 'を', 'ん', 'あける', 'つぎへ'], color: 'color-wa' },
+            { id: 'spacer', type: 'spacer' },
+            { id: 'ga', chars: ['が', 'ぎ', 'ぐ', 'げ', 'ご'], color: 'color-ka' },
+            { id: 'za', chars: ['ざ', 'じ', 'ず', 'ぜ', 'ぞ'], color: 'color-sa' },
+            { id: 'da', chars: ['だ', 'ぢ', 'づ', 'で', 'ど'], color: 'color-ta' },
+            { id: 'ba', chars: ['ば', 'び', 'ぶ', 'べ', 'ぼ'], color: 'color-ha' },
+            { id: 'pa', chars: ['ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'], color: 'color-ha' },
+            { id: 'small-a', chars: ['ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ'], color: 'color-a', isSmall: true },
+            { id: 'small-etc', chars: ['っ', 'ゃ', 'ゅ', 'ょ', 'ー'], color: 'special-key', isSmall: true }
+        ];
+
+        function hiraToKata(str) {
+            return str.replace(/[\u3041-\u3096]/g, (m) => String.fromCharCode(m.charCodeAt(0) + 0x60));
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('char_practice_current', JSON.stringify(currentContent));
+        }
+
+        function pushToHistory(content) {
+            if (!content || content.length === 0) return;
+            let history = JSON.parse(localStorage.getItem('char_practice_history') || '[]');
+            
+            const currentString = JSON.stringify(content);
+            if (history.length > 0 && JSON.stringify(history[0]) === currentString) return;
+
+            history.unshift(JSON.parse(currentString));
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('char_practice_history', JSON.stringify(history));
+        }
+
+        function updateDisplay() {
+            display.innerHTML = '';
+            currentContent.forEach(item => {
+                if (item.type === 'space') {
+                    const span = document.createElement('span');
+                    span.className = 'space-char';
+                    span.innerText = '_';
+                    display.appendChild(span);
+                } else if (item.type === 'newline') {
+                    // 改行文字を表示エリアで実体化
+                    display.appendChild(document.createElement('br'));
+                } else {
+                    display.appendChild(document.createTextNode(item.value));
+                }
+            });
+            // 自動スクロール
+            display.scrollTop = display.scrollHeight;
+            saveToStorage();
+        }
+
+        function createKeyboard() {
+            scrollContainer.innerHTML = '';
+            groups.forEach(group => {
+                if (group.type === 'spacer') {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'half-spacer';
+                    scrollContainer.appendChild(spacer);
+                    return;
+                }
+
+                const colDiv = document.createElement('div');
+                colDiv.className = 'keyboard-column';
+                
+                group.chars.forEach(char => {
+                    const btn = document.createElement('div');
+                    btn.className = `key-btn ${group.color}`;
+                    
+                    if (char === '') {
+                        btn.style.visibility = 'hidden';
+                    } else if (char === 'あける') {
+                        btn.innerText = 'あける';
+                        btn.classList.add('special-key');
+                        btn.style.fontSize = '0.7rem';
+                        btn.onclick = () => { 
+                            currentContent.push({ type: 'space', value: ' ' }); 
+                            updateDisplay(); 
+                        };
+                    } else if (char === 'つぎへ') {
+                        btn.innerText = 'つぎへ';
+                        btn.classList.add('special-key');
+                        btn.style.fontSize = '0.7rem';
+                        btn.onclick = () => {
+                            // 改行を即座に追加
+                            currentContent.push({ type: 'newline', value: '\n' });
+                            updateDisplay();
+                        };
+                    } else {
+                        if (group.isSmall) {
+                            btn.classList.add('small-char-btn');
+                        }
+                        const targetChar = isKatakana ? hiraToKata(char) : char;
+                        btn.innerText = targetChar;
+                        btn.onclick = () => {
+                            currentContent.push({ type: 'text', value: targetChar });
+                            updateDisplay();
+                        };
+                    }
+                    colDiv.appendChild(btn);
+                });
+                scrollContainer.appendChild(colDiv);
+            });
+            scrollContainer.scrollLeft = scrollContainer.scrollWidth;
+        }
+
+        function deleteChar() {
+            currentContent.pop();
+            updateDisplay();
+        }
+
+        function clearAll() {
+            if (currentContent.length > 0) {
+                pushToHistory(currentContent);
+                currentContent = [];
+                updateDisplay();
+            }
+        }
+
+        function openHistory() {
+            const history = JSON.parse(localStorage.getItem('char_practice_history') || '[]');
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            
+            if (history.length === 0) {
+                list.innerHTML = '<div class="text-center p-4 text-gray-400">履歴はありません</div>';
+            } else {
+                history.forEach((item, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full p-3 bg-gray-50 border rounded-lg text-left text-sm truncate';
+                    // 履歴表示用ラベル（改行はスペースとして表示）
+                    const label = item.map(i => i.value === '\n' ? ' ' : i.value).join('');
+                    btn.innerText = label.trim() || '(空白)';
+                    btn.onclick = () => {
+                        if (currentContent.length > 0) {
+                            pushToHistory(currentContent);
+                        }
+                        currentContent = JSON.parse(JSON.stringify(item));
+                        updateDisplay();
+                        closeHistory();
+                    };
+                    list.appendChild(btn);
+                });
+            }
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        function toggleMode() {
+            isKatakana = !isKatakana;
+            document.getElementById('modeToggle').innerText = isKatakana ? "ひらがなに かえる" : "カタカナに かえる";
+            createKeyboard();
+        }
+
+        function changeSize(size) {
+            display.classList.remove('size-small', 'size-medium', 'size-large');
+            display.classList.add(`size-${size}`);
+            localStorage.setItem('char_practice_size', size);
+            
+            ['small', 'medium', 'large'].forEach(s => {
+                const b = document.getElementById(`btn-${s}`);
+                if (b) b.classList.toggle('size-btn-active', s === size);
+            });
+        }
+
+        function speakText() {
+            if (currentContent.length === 0) return;
+            const textToSpeak = currentContent.map(item => item.value).join('');
+            const uttr = new SpeechSynthesisUtterance(textToSpeak);
+            uttr.lang = 'ja-JP';
+            uttr.rate = 0.8;
+            window.speechSynthesis.speak(uttr);
+        }
+
+        window.onload = () => {
+            createKeyboard();
+            const savedSize = localStorage.getItem('char_practice_size') || 'medium';
+            changeSize(savedSize);
+            const saved = localStorage.getItem('char_practice_current');
+            if (saved) {
+                try {
+                    currentContent = JSON.parse(saved);
+                    updateDisplay();
+                } catch(e) {
+                    currentContent = [];
+                }
+            }
+        };
+    </script>
+</body>
+</html>
+

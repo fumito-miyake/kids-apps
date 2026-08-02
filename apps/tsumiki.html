@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>積み木ガシャーン！</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', 'Comic Sans MS', sans-serif;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: background 1.2s ease;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* スタート画面オーバーレイ */
+    #start-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #start-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    /* 「はじめる」ボタン */
+    #start-btn {
+      padding: 24px 60px;
+      font-size: 36px;
+      font-weight: 900;
+      color: #fff;
+      background: linear-gradient(135deg, #4caf50, #2e7d32);
+      border: 6px solid #fff;
+      border-radius: 80px;
+      box-shadow: 0 12px 30px rgba(46, 125, 50, 0.5), inset 0 4px 0 rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      animation: pulse-start 1.6s infinite ease-in-out;
+    }
+    #start-btn:active {
+      transform: scale(0.92) !important;
+    }
+    @keyframes pulse-start {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* トゲトゲの「こわす」ボタン（ラッパーで外枠と影を強力に表現） */
+    #gashan-wrapper {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      width: 125px;
+      height: 125px;
+      z-index: 10;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.4));
+    }
+    #gashan-wrapper.show {
+      transform: translateX(-50%) scale(1);
+      pointer-events: auto;
+      animation: pulse-star 1.4s infinite ease-in-out;
+    }
+    /* 白い外フチ構造 */
+    #gashan-border {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      clip-path: polygon(
+        50% 0%, 61% 11%, 75% 4%, 79% 19%, 93% 18%, 90% 33%, 100% 43%, 91% 56%, 
+        97% 70%, 84% 78%, 83% 93%, 68% 90%, 59% 100%, 46% 92%, 33% 98%, 28% 84%, 
+        13% 82%, 17% 67%, 4% 58%, 13% 45%, 4% 31%, 18% 26%, 19% 11%, 34% 13%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+    }
+    /* 赤いグラデーション本体 */
+    #gashan-btn {
+      width: 100%;
+      height: 100%;
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      background: radial-gradient(circle, #ff5252, #ff1744);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      clip-path: polygon(
+        50% 0%, 61% 11%, 75% 4%, 79% 19%, 93% 18%, 90% 33%, 100% 43%, 91% 56%, 
+        97% 70%, 84% 78%, 83% 93%, 68% 90%, 59% 100%, 46% 92%, 33% 98%, 28% 84%, 
+        13% 82%, 17% 67%, 4% 58%, 13% 45%, 4% 31%, 18% 26%, 19% 11%, 34% 13%
+      );
+    }
+    #gashan-wrapper:active {
+      transform: translateX(-50%) scale(0.85) !important;
+    }
+    @keyframes pulse-star {
+      0% { transform: translateX(-50%) scale(1) rotate(0deg); }
+      50% { transform: translateX(-50%) scale(1.08) rotate(4deg); }
+      100% { transform: translateX(-50%) scale(1) rotate(0deg); }
+    }
+    /* 画面振動アニメーション */
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-4px, -2px, 0); }
+      20%, 80% { transform: translate3d(6px, 4px, 0); }
+      30%, 50%, 70% { transform: translate3d(-8px, -6px, 0); }
+      40%, 60% { transform: translate3d(8px, 6px, 0); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <canvas id="canvas"></canvas>
+  <div id="start-overlay">
+    <button id="start-btn">はじめる</button>
+  </div>
+  <div id="gashan-wrapper">
+    <div id="gashan-border">
+      <button id="gashan-btn">こわす</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Web Audio API サウンドシステム ---
+class SoundEffects {
+  constructor() {
+    this.ctx = null;
+  }
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+  // スタート音「ポーン♪」
+  playStart() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+    osc.frequency.exponentialRampToValueAtTime(1046.50, this.ctx.currentTime + 0.15); // C6
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.2);
+  }
+  // 置く音「コトン♪」
+  playPlace() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(170, this.ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.08);
+  }
+  // ガシャーン爆発音
+  playGashan() {
+    if (!this.ctx) return;
+    // ノイズ生成
+    const bufferSize = this.ctx.sampleRate * 0.6;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.5);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start();
+
+    // 衝撃の低音
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.4);
+    oscGain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    oscGain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+    osc.connect(oscGain);
+    oscGain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.4);
+  }
+  // ぶつかる音「カタン」
+  playHit() {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220 + Math.random() * 200, this.ctx.currentTime);
+    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.04);
+  }
+  // 乗り物効果音
+  playVehicle(emoji) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    
+    if (['🚗','🚕','🚙','🚌','🚓','🚚','🚛'].includes(emoji)) {
+      // プップー！
+      [360, 360].forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.12 + 0.1);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.1);
+      });
+    } else if (['🚑','🚒'].includes(emoji)) {
+      // ピーポー！ / ウーカン！
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(784, now); // ピー
+      osc.frequency.setValueAtTime(659, now + 0.15); // ポー
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (['🚂','🚆','🚄','🚅','🚇','🚝'].includes(emoji)) {
+      // ポッポー！
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.linearRampToValueAtTime(420, now + 0.22);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (['🚁','✈️'].includes(emoji)) {
+      // ブーン！
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.linearRampToValueAtTime(180, now + 0.3);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+  }
+}
+
+const sounds = new SoundEffects();
+
+// --- 背景テーマデータ ---
+const BACKGROUNDS = [
+  'linear-gradient(to bottom, #87CEEB, #E0F6FF)', // 青空
+  'linear-gradient(to bottom, #74d680, #37a047)', // 公園
+  'linear-gradient(to bottom, #ff9a9e, #fecfef)', // 部屋・ポップ
+  'linear-gradient(to bottom, #a8edd9, #fed6e3)', // 花畑
+  'linear-gradient(to bottom, #ff7e5f, #feb47b)', // 夕焼け
+  'linear-gradient(to bottom, #83a4d4, #b6fbff)', // 雪景色
+  'linear-gradient(to bottom, #e65c00, #F9D423)'  // カラフル
+];
+
+// --- 積み木の色（ベース色・明・暗の3色構造で3D感を表現） ---
+const BLOCK_COLORS = [
+  { base: '#FF4B4B', top: '#FF7676', side: '#D32F2F' }, // 赤
+  { base: '#3B82F6', top: '#60A5FA', side: '#1D4ED8' }, // 青
+  { base: '#EAB308', top: '#FACC15', side: '#CA8A04' }, // 黄
+  { base: '#22C55E', top: '#4ADE80', side: '#15803D' }, // 緑
+  { base: '#F97316', top: '#FB923C', side: '#C2410C' }, // オレンジ
+  { base: '#A855F7', top: '#C084FC', side: '#7E22CE' }, // 紫
+  { base: '#EC4899', top: '#F472B6', side: '#BE185D' }, // ピンク
+  { base: '#06B6D4', top: '#22D3EE', side: '#0E7490' }  // 水色
+];
+
+const VEHICLES = ['🚗','🚕','🚙','🚌','🚓','🚑','🚒','🚜','🚛','🚚','🚂','🚆','🚄','🚅','🚇','🚝','🚁','✈️','🚢'];
+
+// --- ゲーム状態変数 ---
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('game-container');
+const gashanWrapper = document.getElementById('gashan-wrapper');
+const gashanBtn = document.getElementById('gashan-btn');
+const startBtn = document.getElementById('start-btn');
+const startOverlay = document.getElementById('start-overlay');
+
+let width, height;
+let blockSize;
+let columns = 5;
+let grid = []; // 各列の積み上がり個数
+let blocks = [];
+let particles = [];
+let currentBlock = null;
+let isPhysicsActive = false;
+let isFloorDropped = false; // 床が抜けたかどうかのフラグ
+let isDragging = false;
+let dragX = 0;
+let isResetting = false;
+let gameStarted = false;
+
+// 画面サイズ調整
+function resize() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  blockSize = Math.floor(Math.min(width / columns, 85));
+}
+window.addEventListener('resize', resize);
+resize();
+
+// --- クラス定義 ---
+class Block {
+  constructor(x, y, colorScheme, emoji = null) {
+    this.x = x;
+    this.y = y;
+    this.w = blockSize - 6;
+    this.h = blockSize - 6;
+    this.color = colorScheme;
+    this.emoji = emoji;
+    
+    // 物理パラメータ
+    this.vx = 0;
+    this.vy = 0;
+    this.angle = 0;
+    this.vAngle = 0;
+    this.isPlaced = false;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+    ctx.rotate(this.angle);
+
+    const w = this.w;
+    const h = this.h;
+    const depth = 8; // 立体感の厚み
+
+    // 1. 影・側面（立体感の下側と右側）
+    ctx.fillStyle = this.color.side;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2, -h / 2 + depth, w, h, 12);
+    ctx.fill();
+
+    // 2. 正面メインブロック
+    ctx.fillStyle = this.color.base;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2, -h / 2, w, h - depth, [12, 12, 6, 6]);
+    ctx.fill();
+
+    // 3. 上部の明るい光沢ハイライト
+    ctx.fillStyle = this.color.top;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2 + 3, -h / 2 + 3, w - 6, (h - depth) / 3, [9, 9, 2, 2]);
+    ctx.fill();
+
+    // 4. 乗り物絵文字（くっきり見せるために白丸ベース＋くっきり影を配置）
+    if (this.emoji) {
+      const circleRadius = w * 0.32;
+      
+      // 白背景のフレームでくっきり際立たせる
+      ctx.fillStyle = '#FFFFFF';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.beginPath();
+      ctx.arc(0, -depth / 2, circleRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 影リセット
+      ctx.shadowColor = 'transparent';
+
+      // 絵文字本体
+      ctx.font = `bold ${w * 0.5}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.emoji, 0, -depth / 2 + 2);
+    }
+
+    ctx.restore();
+  }
+
+  updatePhysics() {
+    if (!isPhysicsActive) return;
+
+    // 重力
+    this.vy += 0.5;
+    
+    // 位置更新
+    this.x += this.vx;
+    this.y += this.vy;
+    this.angle += this.vAngle;
+
+    // 空気抵抗・摩擦
+    this.vx *= 0.985;
+    this.vy *= 0.985;
+    this.vAngle *= 0.97;
+
+    // 壁の反発
+    const bounce = 0.75;
+    if (this.x < 5) {
+      this.x = 5;
+      this.vx = -this.vx * bounce;
+      this.vAngle += (Math.random() - 0.5) * 0.1;
+      sounds.playHit();
+    }
+    if (this.x + this.w > width - 5) {
+      this.x = width - 5 - this.w;
+      this.vx = -this.vx * bounce;
+      this.vAngle += (Math.random() - 0.5) * 0.1;
+      sounds.playHit();
+    }
+    
+    // 床の反射（※床が抜けていない時のみバウンド）
+    if (!isFloorDropped) {
+      if (this.y + this.h > height - 10) {
+        this.y = height - 10 - this.h;
+        this.vy = -this.vy * bounce;
+        this.vx *= 0.8;
+        this.vAngle *= 0.8;
+        if (Math.abs(this.vy) > 1.5) sounds.playHit();
+      }
+    }
+  }
+}
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.size = Math.random() * 10 + 5;
+    this.vx = (Math.random() - 0.5) * 14;
+    this.vy = (Math.random() - 0.5) * 14 - 4;
+    this.alpha = 1;
+    this.rotation = Math.random() * Math.PI * 2;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.25;
+    this.alpha -= 0.02;
+  }
+  draw() {
+    if (this.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotation);
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.roundRect(-this.size / 2, -this.size / 2, this.size, this.size, 3);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// --- ゲーム処理 ---
+
+function initGame() {
+  resize();
+  blocks = [];
+  particles = [];
+  grid = new Array(columns).fill(0);
+  isPhysicsActive = false;
+  isFloorDropped = false;
+  isResetting = false;
+  gashanWrapper.classList.remove('show');
+  
+  // ランダム背景に切り替え
+  const bg = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+  container.style.background = bg;
+
+  if (gameStarted) {
+    spawnBlock();
+  }
+}
+
+function spawnBlock() {
+  if (!gameStarted || isPhysicsActive || isResetting) return;
+
+  // 上限に達していない（まだ積める）列を探す
+  const maxHeightLimit = Math.max(1, Math.floor((height - blockSize * 1.2) / blockSize));
+  let availableCols = [];
+  for (let c = 0; c < columns; c++) {
+    if (grid[c] < maxHeightLimit) {
+      availableCols.push(c);
+    }
+  }
+
+  // どの列も上限まで到達している場合は空いている一番低い列に落とす
+  if (availableCols.length === 0) {
+    let minVal = Math.min(...grid);
+    for (let c = 0; c < columns; c++) {
+      if (grid[c] === minVal) availableCols.push(c);
+    }
+  }
+
+  // 空いている列の中からランダム選択
+  const col = availableCols[Math.floor(Math.random() * availableCols.length)];
+  const colorScheme = BLOCK_COLORS[Math.floor(Math.random() * BLOCK_COLORS.length)];
+  
+  // レア（乗り物）判定（35%の確率）
+  let emoji = null;
+  if (Math.random() < 0.35) {
+    emoji = VEHICLES[Math.floor(Math.random() * VEHICLES.length)];
+  }
+
+  const startOffset = (width - columns * blockSize) / 2;
+  const startX = col * blockSize + startOffset + 3;
+  currentBlock = new Block(startX, -blockSize, colorScheme, emoji);
+}
+
+function createSparkles(x, y, color) {
+  for (let i = 0; i < 10; i++) {
+    particles.push(new Particle(x, y, color));
+  }
+}
+
+function placeCurrentBlock() {
+  sounds.init();
+  
+  const startOffset = (width - columns * blockSize) / 2;
+  let col = Math.floor((currentBlock.x + currentBlock.w / 2 - startOffset) / blockSize);
+  col = Math.min(Math.max(col, 0), columns - 1);
+
+  const targetY = height - (grid[col] + 1) * blockSize;
+  currentBlock.x = col * blockSize + startOffset + 3;
+  currentBlock.y = targetY + 3;
+  currentBlock.isPlaced = true;
+
+  grid[col]++;
+  blocks.push(currentBlock);
+  
+  sounds.playPlace();
+  createSparkles(currentBlock.x + blockSize / 2, currentBlock.y + blockSize / 2, currentBlock.color.base);
+
+  currentBlock = null;
+
+  // 3つ以上積まれたら「こわす」ボタンを表示
+  if (blocks.length >= 3 && !gashanWrapper.classList.contains('show')) {
+    gashanWrapper.classList.add('show');
+  }
+
+  // 次の積み木を即座に生成
+  setTimeout(spawnBlock, 200);
+}
+
+// --- 「こわす！」発動 ---
+function triggerGashan() {
+  if (isPhysicsActive || blocks.length === 0) return;
+  
+  sounds.init();
+  sounds.playGashan();
+
+  isPhysicsActive = true;
+  gashanWrapper.classList.remove('show');
+  container.classList.add('shake');
+  setTimeout(() => container.classList.remove('shake'), 400);
+
+  // 全ての積み木に豪快な爆発の力を付与
+  blocks.forEach(b => {
+    const centerX = width / 2;
+    const centerY = height + 100;
+    const angle = Math.atan2(b.y - centerY, b.x - centerX);
+    const speed = Math.random() * 30 + 20;
+
+    b.vx = Math.cos(angle) * speed + (Math.random() - 0.5) * 12;
+    b.vy = Math.sin(angle) * speed - Math.random() * 12;
+    b.vAngle = (Math.random() - 0.5) * 0.6;
+
+    // キラキラ粒子
+    createSparkles(b.x + b.w / 2, b.y + b.h / 2, b.color.base);
+
+    // 乗り物の効果音を時間差で鳴らす
+    if (b.emoji) {
+      setTimeout(() => sounds.playVehicle(b.emoji), Math.random() * 500);
+    }
+  });
+
+  // はじけ飛ぶ演出をさらに1秒長く楽しんだ（3.2秒）後に「床が抜けて」画面外へ落下
+  setTimeout(() => {
+    isFloorDropped = true; // 床が抜けて下へ一気に落下開始
+
+    // 全ての積み木が下へ落ち切った頃（1.2秒後）に自動的に次のゲームへ
+    setTimeout(() => {
+      isResetting = true;
+      initGame();
+    }, 1200);
+  }, 3200);
+}
+
+// --- 操作イベント処理 ---
+function handleStart(e) {
+  if (!gameStarted) return;
+  sounds.init();
+  if (isPhysicsActive || !currentBlock) return;
+  isDragging = true;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  dragX = clientX;
+}
+
+function handleMove(e) {
+  if (!gameStarted || !isDragging || !currentBlock || isPhysicsActive) return;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const deltaX = clientX - dragX;
+  dragX = clientX;
+
+  currentBlock.x += deltaX;
+  // 画面外への飛び出し防止
+  const startOffset = (width - columns * blockSize) / 2;
+  currentBlock.x = Math.min(Math.max(currentBlock.x, startOffset), width - startOffset - currentBlock.w);
+}
+
+function handleEnd() {
+  isDragging = false;
+}
+
+window.addEventListener('mousedown', handleStart);
+window.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+
+window.addEventListener('touchstart', handleStart);
+window.addEventListener('touchmove', handleMove);
+window.addEventListener('touchend', handleEnd);
+
+gashanBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  triggerGashan();
+});
+
+// 「はじめる」ボタンクリックイベント
+startBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  sounds.init();
+  sounds.playStart();
+  gameStarted = true;
+  startOverlay.classList.add('hidden');
+  spawnBlock();
+});
+
+// --- メイン描画・更新ループ ---
+function update() {
+  ctx.clearRect(0, 0, width, height);
+
+  // 1. 落下中の積み木処理
+  if (currentBlock && !isPhysicsActive) {
+    currentBlock.y += 3.8; // 落ちる速度
+
+    // 着地判定
+    const startOffset = (width - columns * blockSize) / 2;
+    let col = Math.floor((currentBlock.x + currentBlock.w / 2 - startOffset) / blockSize);
+    col = Math.min(Math.max(col, 0), columns - 1);
+    
+    const targetY = height - (grid[col] + 1) * blockSize;
+
+    if (currentBlock.y >= targetY) {
+      placeCurrentBlock();
+    } else {
+      currentBlock.draw();
+    }
+  }
+
+  // 2. 積まれている/飛び散る積み木の更新・描画
+  for (let i = 0; i < blocks.length; i++) {
+    const b = blocks[i];
+    if (isPhysicsActive) {
+      b.updatePhysics();
+
+      // 床が抜けていない間だけ積み木同士の衝突判定を行う
+      if (!isFloorDropped) {
+        for (let j = i + 1; j < blocks.length; j++) {
+          const b2 = blocks[j];
+          const dx = (b.x + b.w / 2) - (b2.x + b2.w / 2);
+          const dy = (b.y + b.h / 2) - (b2.y + b2.h / 2);
+          const dist = Math.hypot(dx, dy);
+          if (dist < blockSize) {
+            const overlap = blockSize - dist;
+            const nx = dx / (dist || 1);
+            const ny = dy / (dist || 1);
+            b.x += nx * overlap * 0.5;
+            b.y += ny * overlap * 0.5;
+            b2.x -= nx * overlap * 0.5;
+            b2.y -= ny * overlap * 0.5;
+            b.vx += nx * 1.5;
+            b.vy += ny * 1.5;
+            b2.vx -= nx * 1.5;
+            b2.vy -= nx * 1.5;
+          }
+        }
+      }
+    }
+    b.draw();
+  }
+
+  // 3. パーティクル（キラキラ）更新・描画
+  particles.forEach((p, index) => {
+    p.update();
+    p.draw();
+    if (p.alpha <= 0) particles.splice(index, 1);
+  });
+
+  requestAnimationFrame(update);
+}
+
+// 画面読み込み完了
+window.onload = function() {
+  initGame();
+  requestAnimationFrame(update);
+};
+
+</script>
+</body>
+</html>
+

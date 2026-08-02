@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ししおどし</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8faf8;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+        canvas {
+            background: linear-gradient(to bottom, #f0f9ff 0%, #ffffff 100%);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            max-width: 100%;
+        }
+        .controls {
+            margin-top: 25px;
+            padding: 20px 40px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-3xl font-bold text-emerald-900 mb-6">ししおどし</div>
+    
+    <canvas id="shishiodoshiCanvas"></canvas>
+
+    <div class="controls">
+        <div class="flex flex-col">
+            <label class="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">みずのつよさ</label>
+            <input type="range" id="flowRate" min="0.1" max="1.5" step="0.1" value="0.5" class="w-48 h-2 bg-emerald-100 rounded-lg appearance-none cursor-pointer">
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('shishiodoshiCanvas');
+        const ctx = canvas.getContext('2d');
+        const flowInput = document.getElementById('flowRate');
+
+        canvas.width = 800;
+        canvas.height = 500;
+
+        // --- 座標・サイズ設定 ---
+        const pivotX = 350;     // 全体の位置
+        const pivotY = 320;     
+        const bambooBack = 180;  
+        const bambooFront = 180; 
+        const bambooWidth = 46;
+
+        let angle = -0.4;       
+        let angularVel = 0;
+        let waterAmount = 0;    
+        const tippingPoint = 80; 
+
+        // アニメーション用タイマー
+        let flowOffset = 0;
+
+        // 音声合成用のAudioContext
+        let audioCtx = null;
+        let hasHit = false; // 音の重複再生防止フラグ
+
+        function playClackSound() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                // 「コン！」という硬質な竹と石の音を模した設定
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch (e) {
+                // 音声再生がブロックされた場合のフォールバック
+            }
+        }
+
+        function drawBamboo(x, y, ang, water) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(ang);
+
+            // 1. 竹の本体（半透明）
+            ctx.beginPath();
+            ctx.rect(-bambooBack, -bambooWidth/2, bambooBack + bambooFront - 60, bambooWidth);
+            ctx.fillStyle = 'rgba(120, 170, 90, 0.4)';
+            ctx.fill();
+            ctx.strokeStyle = '#3e4d1d';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 2. 竹の口（上が開いた直角三角形のカット）
+            ctx.beginPath();
+            ctx.moveTo(bambooFront - 60, -bambooWidth/2);
+            ctx.lineTo(bambooFront, bambooWidth/2);
+            ctx.lineTo(bambooFront - 60, bambooWidth/2);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(120, 170, 90, 0.4)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(bambooFront - 60, bambooWidth/2);
+            ctx.lineTo(bambooFront, bambooWidth/2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(bambooFront - 60, -bambooWidth/2);
+            ctx.lineTo(bambooFront, bambooWidth/2);
+            ctx.stroke();
+
+            // 3. 内部の水（奥から溜まる）
+            if (water > 0) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(-bambooBack + 5, -bambooWidth/2 + 5, bambooBack + bambooFront - 5, bambooWidth - 10);
+                ctx.clip();
+
+                ctx.beginPath();
+                const waterVisualWidth = (bambooBack + bambooFront) * (water / 100);
+                ctx.rect(-bambooBack + 5, -bambooWidth/2 + 5, waterVisualWidth, bambooWidth - 10);
+                ctx.fillStyle = 'rgba(40, 140, 240, 0.7)';
+                ctx.fill();
+                ctx.restore();
+            }
+
+            // 4. 節の線
+            ctx.beginPath();
+            ctx.moveTo(-bambooBack + 100, -bambooWidth/2);
+            ctx.lineTo(-bambooBack + 100, bambooWidth/2);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawEnvironment() {
+            // 支柱
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(pivotX - 8, pivotY, 16, 150);
+
+            // 受け石（左側）
+            ctx.beginPath();
+            ctx.ellipse(pivotX - 180, 430, 60, 25, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#888';
+            ctx.fill();
+            
+            // 排水を受ける池/石（右側）
+            ctx.beginPath();
+            ctx.ellipse(pivotX + 250, 460, 80, 20, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#aab';
+            ctx.fill();
+
+            // 給水管
+            ctx.fillStyle = '#795548';
+            ctx.fillRect(pivotX + 160, 100, 140, 20); 
+            ctx.fillRect(pivotX + 280, 100, 20, 300);
+
+            // 給水アニメーション
+            const flowRate = parseFloat(flowInput.value);
+            if (flowRate > 0) {
+                flowOffset += flowRate * 5;
+                if (flowOffset > 1000) flowOffset = 0;
+
+                const waterX = pivotX + 180;
+                const waterTop = 120;
+                const waterBottom = 450;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(waterX, waterTop);
+                ctx.lineTo(waterX, waterBottom);
+                ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+                ctx.lineWidth = 6;
+                ctx.setLineDash([20, 15]);
+                ctx.lineDashOffset = -flowOffset; 
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(waterX - 1, waterTop);
+                ctx.lineTo(waterX - 1, waterBottom);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 30]);
+                ctx.lineDashOffset = -flowOffset * 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function update() {
+            const flowRate = parseFloat(flowInput.value);
+
+            if (angle < 0.1) {
+                waterAmount += flowRate;
+                if (waterAmount > 100) waterAmount = 100;
+            }
+
+            let waterTorque = (waterAmount - tippingPoint) * 0.0006;
+            let bambooTorque = -0.006;
+
+            angularVel += (waterTorque + bambooTorque);
+            angle += angularVel;
+            angularVel *= 0.98;
+
+            // 下限（石を叩く瞬間）
+            if (angle < -0.45) {
+                angle = -0.45;
+                if (!hasHit) {
+                    playClackSound();
+                    hasHit = true;
+                }
+                angularVel = Math.abs(angularVel) * 0.3;
+            } else {
+                hasHit = false; // 上に向かっているときはリセット
+            }
+
+            if (angle > 0.8) {
+                angle = 0.8;
+                angularVel *= 0.8;
+            }
+
+            if (angle > 0.4 && waterAmount > 0) {
+                const spill = (angle - 0.3) * 5;
+                waterAmount -= spill;
+                if (waterAmount < 0) waterAmount = 0;
+
+                ctx.save();
+                ctx.beginPath();
+                const startX = pivotX + Math.cos(angle) * (bambooFront - 20);
+                const startY = pivotY + Math.sin(angle) * (bambooFront - 20);
+                ctx.moveTo(startX, startY);
+                ctx.quadraticCurveTo(startX + 20, startY + 50, startX + 10, 450);
+                ctx.strokeStyle = 'rgba(60, 150, 255, 0.8)';
+                ctx.lineWidth = 10;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawEnvironment();
+            drawBamboo(pivotX, pivotY, angle, waterAmount);
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        window.onload = draw;
+    </script>
+</body>
+</html>
+

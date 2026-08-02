@@ -1,0 +1,393 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ぽよよん物理パズル</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #eef2f7;
+            --panel-color: #ffffff;
+            --accent-color: #ff6b6b;
+            --border-color: #ffcc00;
+            --select-color: #4dabf7;
+            --speed-ball-color: #00d4ff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial Round', sans-serif;
+            background-color: var(--bg-color);
+            touch-action: none;
+            user-select: none;
+            /* Dynamic Viewport Height を使用してブラウザバーの影響を回避 */
+            height: 100dvh; 
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100%; /* 親の 100dvh を継承 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #canvas-holder {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            border: 10px solid var(--border-color);
+            box-sizing: border-box;
+            border-radius: 20px;
+            margin: 8px;
+            overflow: hidden;
+            /* 最小の高さを確保しつつ、ツールバーに場所を譲る */
+            min-height: 0; 
+        }
+
+        #toolbar-container {
+            padding: 10px;
+            background: var(--panel-color);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+            /* 下端にしっかり固定 */
+            flex-shrink: 0; 
+        }
+
+        #toolbar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        .tool-item {
+            aspect-ratio: 1/1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #eee;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tool-item.active {
+            border-color: var(--select-color);
+            background: #e7f5ff;
+        }
+
+        .icon-svg {
+            width: 80%;
+            height: 80%;
+            pointer-events: none;
+        }
+
+        #arrow-ui {
+            position: absolute;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .arrow-btn {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            background: #ffec99;
+            border: 4px solid #fcc419;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: bold;
+            color: #5c940d;
+            box-shadow: 0 5px 0px #f08c00;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="canvas-holder">
+        <div id="arrow-ui">
+            <div class="arrow-btn" style="top: -100px; left: 0;" data-vx="0" data-vy="-1">↑</div>
+            <div class="arrow-btn" style="top: -70px; left: 70px;" data-vx="0.7" data-vy="-0.7">↗</div>
+            <div class="arrow-btn" style="top: 0; left: 100px;" data-vx="1" data-vy="0">→</div>
+            <div class="arrow-btn" style="top: 70px; left: 70px;" data-vx="0.7" data-vy="0.7">↘</div>
+            <div class="arrow-btn" style="top: 100px; left: 0;" data-vx="0" data-vy="1">↓</div>
+            <div class="arrow-btn" style="top: 70px; left: -70px;" data-vx="-0.7" data-vy="0.7">↙</div>
+            <div class="arrow-btn" style="top: 0; left: -100px;" data-vx="-1" data-vy="0">←</div>
+            <div class="arrow-btn" style="top: -70px; left: -70px;" data-vx="-0.7" data-vy="-0.7">↖</div>
+        </div>
+    </div>
+
+    <div id="toolbar-container">
+        <div id="toolbar">
+            <div class="tool-item" data-type="square">
+                <svg class="icon-svg" viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" rx="5" fill="#4dabf7"/></svg>
+            </div>
+            <div class="tool-item" data-type="rect-h">
+                <svg class="icon-svg" viewBox="0 0 100 100"><rect x="10" y="40" width="80" height="20" rx="3" fill="#51cf66"/></svg>
+            </div>
+            <div class="tool-item" data-type="rect-v">
+                <svg class="icon-svg" viewBox="0 0 100 100"><rect x="40" y="10" width="20" height="80" rx="3" fill="#51cf66"/></svg>
+            </div>
+            <div class="tool-item" data-type="tri-rb">
+                <svg class="icon-svg" viewBox="0 0 100 100"><path d="M25,75 L75,75 L75,25 Z" fill="#fcc419"/></svg>
+            </div>
+            <div class="tool-item" data-type="tri-lb">
+                <svg class="icon-svg" viewBox="0 0 100 100"><path d="M25,75 L75,75 L25,25 Z" fill="#fcc419"/></svg>
+            </div>
+            
+            <div class="tool-item" data-type="tri-rt">
+                <svg class="icon-svg" viewBox="0 0 100 100"><path d="M75,25 L75,75 L25,25 Z" fill="#fcc419"/></svg>
+            </div>
+            <div class="tool-item" data-type="tri-lt">
+                <svg class="icon-svg" viewBox="0 0 100 100"><path d="M25,25 L75,25 L25,75 Z" fill="#fcc419"/></svg>
+            </div>
+            <div class="tool-item" data-type="ball">
+                <svg class="icon-svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#ff6b6b"/></svg>
+            </div>
+            <div class="tool-item" data-type="speed-ball">
+                <svg class="icon-svg" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="35" fill="#00d4ff"/>
+                    <path d="M30,50 L50,30 L70,50 M30,70 L50,50 L70,70" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="tool-item" data-type="eraser">
+                <svg class="icon-svg" viewBox="0 0 100 100">
+                    <rect x="25" y="20" width="50" height="60" rx="4" fill="#fff" stroke="#ccc" stroke-width="2"/>
+                    <rect x="25" y="45" width="50" height="35" rx="2" fill="#339af0"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const { Engine, Render, Runner, World, Bodies, Body, Composite, Events } = Matter;
+
+let engine, render, runner;
+let activeBall = null;
+let currentTool = null;
+const BASE_SPEED = 20;
+
+window.onload = () => {
+    initPhysics();
+    setupApp();
+};
+
+function initPhysics() {
+    const canvasHolder = document.getElementById('canvas-holder');
+    const width = canvasHolder.clientWidth;
+    const height = canvasHolder.clientHeight;
+
+    engine = Engine.create();
+    engine.world.gravity.y = 0.8;
+
+    render = Render.create({
+        element: canvasHolder,
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false,
+            background: '#ffffff',
+            pixelRatio: window.devicePixelRatio
+        }
+    });
+
+    const wallThick = 200;
+    const wallOpt = { 
+        isStatic: true, 
+        render: { visible: false }, 
+        friction: 0.1, 
+        restitution: 1, 
+        label: 'wall' 
+    };
+    
+    World.add(engine.world, [
+        Bodies.rectangle(width/2, -wallThick/2, width, wallThick, wallOpt),
+        Bodies.rectangle(width/2, height + wallThick/2, width, wallThick, wallOpt),
+        Bodies.rectangle(-wallThick/2, height/2, wallThick, height, wallOpt),
+        Bodies.rectangle(width + wallThick/2, height/2, wallThick, height, wallOpt)
+    ]);
+
+    runner = Runner.run(engine);
+    Render.run(render);
+}
+
+function setupApp() {
+    const canvasHolder = document.getElementById('canvas-holder');
+    const tools = document.querySelectorAll('.tool-item');
+
+    tools.forEach(tool => {
+        tool.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const type = tool.getAttribute('data-type');
+            if (currentTool === type) {
+                currentTool = null;
+                tool.classList.remove('active');
+            } else {
+                tools.forEach(t => t.classList.remove('active'));
+                currentTool = type;
+                tool.classList.add('active');
+            }
+            hideArrows();
+        });
+    });
+
+    canvasHolder.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvasHolder.getBoundingClientRect();
+        const borderX = 10; 
+        const borderY = 10;
+        const x = touch.clientX - rect.left - borderX;
+        const y = touch.clientY - rect.top - borderY;
+
+        const allBodies = Composite.allBodies(engine.world);
+        const clicked = Matter.Query.point(allBodies, { x, y }).find(b => b.label !== 'wall');
+
+        if (currentTool === 'eraser') {
+            if (clicked) {
+                World.remove(engine.world, clicked);
+                hideArrows();
+            }
+        } else if (currentTool) {
+            createObject(currentTool, x, y);
+        } else {
+            if (clicked && clicked.label.includes('ball') && clicked.isStatic) {
+                showArrows(clicked);
+            } else {
+                hideArrows();
+            }
+        }
+    });
+
+    document.querySelectorAll('.arrow-btn').forEach(btn => {
+        btn.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (!activeBall) return;
+            
+            const vxDir = parseFloat(btn.dataset.vx);
+            const vyDir = parseFloat(btn.dataset.vy);
+            
+            launchBall(vxDir, vyDir);
+        });
+    });
+}
+
+function launchBall(vxDir, vyDir) {
+    if (!activeBall) return;
+    
+    const pos = { x: activeBall.position.x, y: activeBall.position.y };
+    const isSpeedBall = activeBall.label === 'speed-ball';
+    const multiplier = isSpeedBall ? 2.2 : 1.0;
+    
+    World.remove(engine.world, activeBall);
+    
+    const newBall = Bodies.circle(pos.x, pos.y, 22, {
+        restitution: 0.8,
+        label: isSpeedBall ? 'speed-ball' : 'ball',
+        isStatic: false,
+        render: { 
+            fillStyle: isSpeedBall ? '#00d4ff' : '#ff6b6b', 
+            strokeStyle: '#333', 
+            lineWidth: 2 
+        }
+    });
+    
+    World.add(engine.world, newBall);
+    
+    Body.setVelocity(newBall, { 
+        x: vxDir * BASE_SPEED * multiplier, 
+        y: vyDir * BASE_SPEED * multiplier 
+    });
+    
+    activeBall = null;
+    hideArrows();
+}
+
+function createObject(type, x, y) {
+    const s = 50;
+    const commonOpt = { isStatic: true, restitution: 0.8, friction: 0.1, label: 'block', render: { strokeStyle: '#333', lineWidth: 2 } };
+
+    if (type === 'ball' || type === 'speed-ball') {
+        const isSpeed = type === 'speed-ball';
+        const ball = Bodies.circle(x, y, 22, { 
+            restitution: 0.8, 
+            label: type, 
+            isStatic: true, 
+            render: { 
+                fillStyle: isSpeed ? '#00d4ff' : '#ff6b6b', 
+                strokeStyle: '#333', 
+                lineWidth: 2 
+            } 
+        });
+        World.add(engine.world, ball);
+        showArrows(ball);
+        return;
+    }
+
+    let b;
+    if (type.startsWith('tri-')) {
+        const pts = getTriPoints(type, s/2);
+        b = Bodies.fromVertices(0, 0, pts, { ...commonOpt, render: { fillStyle: '#fcc419' } });
+        Body.setPosition(b, { x, y });
+    } else {
+        if (type === 'square') b = Bodies.rectangle(x, y, s, s, { ...commonOpt, render: { fillStyle: '#4dabf7' } });
+        if (type === 'rect-h') b = Bodies.rectangle(x, y, s*2, s/2, { ...commonOpt, render: { fillStyle: '#51cf66' } });
+        if (type === 'rect-v') b = Bodies.rectangle(x, y, s/2, s*2, { ...commonOpt, render: { fillStyle: '#51cf66' } });
+    }
+
+    if (b) World.add(engine.world, b);
+}
+
+function getTriPoints(type, r) {
+    if (type === 'tri-rb') return [{x:-r, y:r}, {x:r, y:r}, {x:r, y:-r}];
+    if (type === 'tri-lb') return [{x:-r, y:r}, {x:r, y:r}, {x:-r, y:-r}];
+    if (type === 'tri-rt') return [{x:r, y:-r}, {x:r, y:r}, {x:-r, y:-r}];
+    if (type === 'tri-lt') return [{x:-r, y:-r}, {x:r, y:-r}, {x:-r, y:r}];
+    return [];
+}
+
+function showArrows(ball) {
+    activeBall = ball;
+    const ui = document.getElementById('arrow-ui');
+    ui.style.display = 'block';
+    ui.style.left = ball.position.x + 'px';
+    ui.style.top = ball.position.y + 'px';
+}
+
+function hideArrows() {
+    document.getElementById('arrow-ui').style.display = 'none';
+    activeBall = null;
+}
+
+Events.on(engine, 'afterUpdate', () => {
+    if (activeBall && activeBall.isStatic) {
+        const ui = document.getElementById('arrow-ui');
+        ui.style.left = activeBall.position.x + 'px';
+        ui.style.top = activeBall.position.y + 'px';
+    }
+});
+
+window.onresize = () => {
+    location.reload();
+};
+</script>
+
+</body>
+</html>
