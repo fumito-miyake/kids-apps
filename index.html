@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🌈 こども の あぷり</title>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="description" content="いろんな子供向けアプリを詰め込んだアプリです">
+    <meta property="og:title" content="こども の あぷり">
+    <meta property="og:description" content="いろんな子供向けアプリを詰め込んだアプリです">
+    <meta property="og:url" content="https://fumito-miyake.github.io/kids-apps/">
+    <meta property="og:type" content="website">
+    
+    <title>🌈 こども の あぷり</title>
 
 <style>
 *{
@@ -254,6 +263,12 @@ Object.entries(GUIDE).forEach(([section,pages],index)=>{
     root.appendChild(sectionElm);
 
 });
+
+    
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js")
+            .then(() => console.log("Service Worker Registered"));
+    }
 
 </script>
 
