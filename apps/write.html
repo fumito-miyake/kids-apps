@@ -1,17 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>あいうえお・れんしゅう</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 教科書体に近いフォントを優先指定 */
         @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
         
         :root {
-            /* UDデジタル教科書体、クレー(macOS)、游教科書体などを優先 */
             --font-kyokasho: "UD Digi Kyokasho N-R", "UD デジタル 教科書体 N-R", "Klee One", "クレー", "YuKyokasho", "游教科書体", "Zen Maru Gothic", serif;
         }
 
@@ -66,6 +63,8 @@
         .keyboard-area {
             background-color: #f0fdf4;
             padding: 10px;
+            /* PWAやホームインジケータのある環境で見切れないよう下部に安全余白を付与 */
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -327,13 +326,11 @@
                     span.innerText = '_';
                     display.appendChild(span);
                 } else if (item.type === 'newline') {
-                    // 改行文字を表示エリアで実体化
                     display.appendChild(document.createElement('br'));
                 } else {
                     display.appendChild(document.createTextNode(item.value));
                 }
             });
-            // 自動スクロール
             display.scrollTop = display.scrollHeight;
             saveToStorage();
         }
@@ -370,7 +367,6 @@
                         btn.classList.add('special-key');
                         btn.style.fontSize = '0.7rem';
                         btn.onclick = () => {
-                            // 改行を即座に追加
                             currentContent.push({ type: 'newline', value: '\n' });
                             updateDisplay();
                         };
@@ -416,7 +412,6 @@
                 history.forEach((item, index) => {
                     const btn = document.createElement('button');
                     btn.className = 'w-full p-3 bg-gray-50 border rounded-lg text-left text-sm truncate';
-                    // 履歴表示用ラベル（改行はスペースとして表示）
                     const label = item.map(i => i.value === '\n' ? ' ' : i.value).join('');
                     btn.innerText = label.trim() || '(空白)';
                     btn.onclick = () => {
