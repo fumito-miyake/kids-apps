@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>くるまのドライブゲーム</title>
     <style>
         :root {
@@ -34,9 +33,8 @@
             background-color: var(--road-color);
             border-left: 10px solid white;
             border-right: 10px solid white;
-            overflow: visible; /* 信号や踏切がはみ出しても表示されるように設定 */
+            overflow: visible;
         }
-        /* 中央線専用の領域（道路の中央部分だけに配置） */
         #road-marks {
             position: absolute;
             top: 0;
@@ -56,7 +54,7 @@
             left: 125px;
             width: 50px;
             height: 80px;
-            z-index: 10;
+            z-index: 10; /* 車を横断歩道や線路より上に設定 */
         }
         .ui-top {
             position: absolute;
@@ -82,7 +80,7 @@
         }
         .controls-container {
             position: absolute;
-            bottom: 30px;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -129,7 +127,7 @@
             position: absolute;
             width: 300px;
             height: 120px;
-            z-index: 15; /* 車や中央線より手前に設定して確実に表示させる */
+            z-index: 5; /* コンテナ全体を車(10)より低く設定 */
             left: 0;
             overflow: visible;
         }
@@ -143,7 +141,7 @@
             display: flex;
             justify-content: space-around;
             pointer-events: none;
-            z-index: 1; 
+            z-index: 1; /* 横断歩道や線路本体は車の下になるように低く設定 */
         }
 
         .crosswalk-line {
@@ -397,7 +395,6 @@
         
         speedVal.innerText = Math.floor(speed * 10);
 
-        // 中央線を上から下へ滑らかにスクロールさせる
         linePosition = (linePosition + speed) % 80;
         roadMarks.style.backgroundPosition = `center ${linePosition}px`;
     }
