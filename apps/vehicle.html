@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -95,32 +94,32 @@
         /* 町の背景 */
         .city-scape {
             position: absolute;
-            bottom: 230px;
+            bottom: 455px;
             left: 0;
             width: 100%;
-            height: 160px;
+            height: 140px;
             z-index: 2;
         }
 
-        /* 地面エリア (道路と線路) */
+        /* 地面エリア (道路、線路) */
         .ground-area {
             position: absolute;
-            bottom: 0;
+            bottom: 275px;
             left: 0;
             width: 100%;
-            height: 230px;
+            height: 180px;
             background: #7ec850;
             z-index: 3;
             border-top: 5px solid #5ca332;
         }
 
-        /* 道路 (バスが走るエリア) */
+        /* 道路 (バスとくるまが走る) ※上端をさらに上に広げて街と繋げる */
         .road {
             position: absolute;
-            top: 15px;
+            top: -15px;
             left: 0;
             width: 100%;
-            height: 75px;
+            height: 100px;
             background: #555555;
             border-top: 4px solid #777;
             border-bottom: 4px solid #777;
@@ -136,13 +135,13 @@
             transform: translateY(-50%);
         }
 
-        /* 線路 (電車が走るエリア) */
+        /* 線路 (電車が走る) */
         .railway {
             position: absolute;
-            top: 105px;
+            top: 106px;
             left: 0;
             width: 100%;
-            height: 45px;
+            height: 42px;
             background: #94714b;
         }
 
@@ -155,7 +154,7 @@
 
         .rail-iron-top {
             position: absolute;
-            top: 10px;
+            top: 9px;
             width: 100%;
             height: 4px;
             background: #aaaaaa;
@@ -164,63 +163,108 @@
 
         .rail-iron-bottom {
             position: absolute;
-            bottom: 10px;
+            bottom: 9px;
             width: 100%;
             height: 4px;
             background: #aaaaaa;
             border-bottom: 1px solid #333333;
         }
 
-        /* 乗り物レイヤー（アニメーション用） */
+        /* 海エリア */
+        .sea {
+            position: absolute;
+            top: 152px;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, #4fc3f7, #0288d1);
+            border-top: 4px solid #81d4fa;
+            overflow: visible;
+            z-index: 4;
+        }
+
+        .sea-wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,0.4) 15px, transparent 15px, transparent 40px);
+            animation: waveMove 3s linear infinite;
+        }
+
+        @keyframes waveMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(40px); }
+        }
+
+        /* 乗り物レイヤー */
         .vehicle {
             position: absolute;
             pointer-events: none;
             z-index: 5;
         }
 
-        /* 線路上の電車位置設定 */
         .train-vehicle {
             top: -41px;
             left: 0;
         }
 
-        /* 道路上のバス位置設定 */
         .bus-vehicle {
-            top: -6px; /* タイヤが飛び出したぶん接地位置を微調整 */
+            top: 2px;
             left: 0;
         }
 
-        /* 空の飛行機位置設定 */
+        .car-vehicle {
+            top: 16px;
+            left: 0;
+        }
+
+        .ship-vehicle {
+            top: 10px;
+            left: 0;
+            z-index: 6;
+        }
+
         .plane-vehicle {
-            top: 12%;
+            top: 8%;
             left: 0;
             z-index: 4;
         }
 
-        /* 操作ボタン */
+        .heli-vehicle {
+            top: 14%;
+            left: 0;
+            z-index: 4;
+        }
+
+        /* 操作ボタンエリア（高さ・余白を下に広げてはみ出しを解消） */
         .controls-area {
             position: absolute;
-            bottom: 15px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
+            bottom: 60px;
+            left: 15px;
+            right: 15px;
+            height: 165px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             z-index: 10;
-            padding: 0 12px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
         .btn {
-            flex: 1;
-            max-width: 170px;
-            height: 65px;
+            width: 100%;
+            height: 60px;
             border: none;
-            border-radius: 18px;
-            font-size: 18px;
+            border-radius: 16px;
+            font-size: 17px;
             font-weight: bold;
             color: white;
             cursor: pointer;
-            box-shadow: 0 6px 0 rgba(0,0,0,0.25), inset 0 3px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 5px 0 rgba(0,0,0,0.25), inset 0 3px 0 rgba(255,255,255,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -232,7 +276,7 @@
 
         .btn:active {
             transform: translateY(3px);
-            box-shadow: 0 3px 0 rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25), inset 0 2px 0 rgba(255,255,255,0.4);
         }
 
         .btn-train {
@@ -250,13 +294,28 @@
             border: 3px solid #0f540f;
         }
 
+        .btn-car {
+            background: linear-gradient(to bottom, #e53935, #b71c1c);
+            border: 3px solid #7f0000;
+        }
+
+        .btn-ship {
+            background: linear-gradient(to bottom, #00acc1, #006064);
+            border: 3px solid #00363a;
+        }
+
+        .btn-heli {
+            background: linear-gradient(to bottom, #ab47bc, #6a1b9a);
+            border: 3px solid #4a148c;
+        }
+
         .hidden {
             display: none !important;
         }
 
         .btn-icon {
-            width: 34px;
-            height: 34px;
+            width: 32px;
+            height: 32px;
         }
     </style>
 </head>
@@ -270,67 +329,63 @@
         <div class="cloud cloud2"></div>
     </div>
 
-    <!-- 町の背景 -->
+    <!-- 町の背景（ビルをなくし、バス停と駅を追加） -->
     <div class="city-scape">
         <svg width="100%" height="100%" viewBox="0 0 1000 160" preserveAspectRatio="none">
+            <!-- 背景の山 -->
             <polygon points="-50,160 150,50 350,160" fill="#9cd67d" />
             <polygon points="200,160 400,30 600,160" fill="#81c784" />
             <polygon points="500,160 750,40 1050,160" fill="#a5d6a7" />
 
+            <!-- 木々 -->
+            <circle cx="60" cy="115" r="22" fill="#66bb6a" />
+            <rect x="56" y="133" width="8" height="20" fill="#8d6e63" />
+
+            <!-- バス停（道路沿い） -->
+            <g transform="translate(180, 70)">
+                <rect x="18" y="40" width="4" height="45" fill="#78909c" />
+                <circle cx="20" cy="35" r="14" fill="#ff5722" stroke="#ffffff" stroke-width="2" />
+                <rect x="12" y="32" width="16" height="6" fill="#ffffff" />
+                <rect x="5" y="80" width="30" height="8" rx="2" fill="#546e7a" />
+            </g>
+
             <!-- 家1 -->
-            <rect x="50" y="95" width="45" height="45" fill="#ffab91" />
-            <polygon points="43,95 72,68 102,95" fill="#e53935" />
-            <rect x="63" y="115" width="13" height="25" fill="#795548" />
-
-            <!-- ビル1 -->
-            <rect x="130" y="40" width="55" height="100" fill="#90caf9" />
-            <rect x="140" y="55" width="13" height="13" fill="#ffffff" />
-            <rect x="162" y="55" width="13" height="13" fill="#ffffff" />
-            <rect x="140" y="78" width="13" height="13" fill="#ffffff" />
-            <rect x="162" y="78" width="13" height="13" fill="#ffffff" />
-
-            <!-- 木1 -->
-            <circle cx="230" cy="110" r="22" fill="#66bb6a" />
-            <rect x="226" y="128" width="8" height="20" fill="#8d6e63" />
-
-            <!-- 家2 -->
             <rect x="270" y="85" width="55" height="55" fill="#ffe082" />
             <polygon points="265,85 297,55 330,85" fill="#1e88e5" />
 
             <!-- 風車 -->
-            <rect x="420" y="60" width="8" height="80" fill="#eceff1" />
-            <circle cx="424" cy="60" r="5" fill="#78909c" />
-            <line x1="424" y1="60" x2="398" y2="60" stroke="#b0bec5" stroke-width="3" />
-            <line x1="424" y1="60" x2="450" y2="60" stroke="#b0bec5" stroke-width="3" />
-            <line x1="424" y1="60" x2="424" y2="34" stroke="#b0bec5" stroke-width="3" />
-            <line x1="424" y1="60" x2="424" y2="86" stroke="#b0bec5" stroke-width="3" />
+            <rect x="390" y="60" width="8" height="80" fill="#eceff1" />
+            <circle cx="394" cy="60" r="5" fill="#78909c" />
+            <line x1="394" y1="60" x2="368" y2="60" stroke="#b0bec5" stroke-width="3" />
+            <line x1="394" y1="60" x2="420" y2="60" stroke="#b0bec5" stroke-width="3" />
+            <line x1="394" y1="60" x2="394" y2="34" stroke="#b0bec5" stroke-width="3" />
+            <line x1="394" y1="60" x2="394" y2="86" stroke="#b0bec5" stroke-width="3" />
 
-            <!-- ビル2 -->
-            <rect x="480" y="25" width="65" height="115" fill="#ce93d8" />
-            <rect x="493" y="40" width="38" height="13" fill="#ffffff" />
-            <rect x="493" y="62" width="38" height="13" fill="#ffffff" />
+            <!-- 駅舎（えき） -->
+            <g transform="translate(500, 40)">
+                <rect x="0" y="30" width="160" height="70" fill="#fff8e1" stroke="#d7ccc8" stroke-width="2" />
+                <polygon points="-10,30 80,0 170,30" fill="#d32f2f" />
+                <rect x="65" y="55" width="30" height="45" fill="#5d4037" />
+                <rect x="15" y="45" width="35" height="25" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+                <rect x="110" y="45" width="35" height="25" fill="#b3e5fc" stroke="#0288d1" stroke-width="1.5" />
+                <!-- 駅看板 -->
+                <rect x="50" y="12" width="60" height="16" fill="#ffffff" stroke="#388e3c" stroke-width="2" rx="3" />
+                <rect x="55" y="16" width="50" height="8" fill="#4caf50" />
+            </g>
 
             <!-- 木2 -->
-            <circle cx="580" cy="115" r="18" fill="#4caf50" />
-            <rect x="576" y="130" width="8" height="18" fill="#8d6e63" />
+            <circle cx="730" cy="115" r="18" fill="#4caf50" />
+            <rect x="726" y="130" width="8" height="18" fill="#8d6e63" />
 
-            <!-- 学校風建物 -->
-            <rect x="630" y="60" width="100" height="80" fill="#ffcc80" />
-            <rect x="665" y="32" width="30" height="28" fill="#ffa726" />
-            <circle cx="680" cy="46" r="7" fill="#ffffff" />
-
-            <!-- 家3 -->
+            <!-- 家2 -->
             <rect x="780" y="95" width="50" height="45" fill="#c5e1a5" />
             <polygon points="775,95 805,68 835,95" fill="#8e24aa" />
-
-            <!-- ビル3 -->
-            <rect x="870" y="50" width="60" height="90" fill="#80deea" />
         </svg>
     </div>
 
-    <!-- 地面エリア -->
+    <!-- 地面エリア (道路、線路、海) -->
     <div class="ground-area">
-        <!-- 道路（バスが走る） -->
+        <!-- 道路（バス・くるまが走る） -->
         <div class="road" id="road">
             <div class="road-line"></div>
         </div>
@@ -340,9 +395,13 @@
             <div class="rail-iron-top"></div>
             <div class="rail-iron-bottom"></div>
         </div>
+        <!-- 海（ふねが走る） -->
+        <div class="sea" id="sea">
+            <div class="sea-wave"></div>
+        </div>
     </div>
 
-    <!-- 操作ボタン -->
+    <!-- 操作ボタン（全6つのボタン） -->
     <div class="controls-area" id="controls">
         <button class="btn btn-train" id="btn-train">
             <svg class="btn-icon" viewBox="0 0 100 100">
@@ -367,14 +426,44 @@
             バス
         </button>
 
+        <button class="btn btn-car" id="btn-car">
+            <svg class="btn-icon" viewBox="0 0 100 100">
+                <rect x="25" y="25" width="45" height="25" rx="5" fill="#e53935"/>
+                <rect x="10" y="45" width="80" height="22" rx="6" fill="#e53935"/>
+                <rect x="30" y="29" width="16" height="14" rx="2" fill="#e0f7fa"/>
+                <rect x="50" y="29" width="16" height="14" rx="2" fill="#e0f7fa"/>
+                <circle cx="30" cy="70" r="9" fill="#333"/>
+                <circle cx="70" cy="70" r="9" fill="#333"/>
+            </svg>
+            くるま
+        </button>
+
         <button class="btn btn-plane" id="btn-plane">
             <svg class="btn-icon" viewBox="0 0 100 100">
                 <path d="M 10 50 Q 50 30 90 45 L 80 30 L 65 30 L 45 45 L 20 45 Z" fill="#ffffff"/>
                 <polygon points="40,46 55,75 68,75 58,46" fill="#e0e0e0"/>
                 <polygon points="20,46 10,25 22,25 32,46" fill="#e0e0e0"/>
-                <circle cx="80" cy="44" r="3" fill="#333"/>
             </svg>
             ひこうき
+        </button>
+
+        <button class="btn btn-heli" id="btn-heli">
+            <svg class="btn-icon" viewBox="0 0 100 100">
+                <line x1="15" y1="20" x2="85" y2="20" stroke="#fff" stroke-width="5"/>
+                <circle cx="50" cy="50" r="22" fill="#ab47bc"/>
+                <rect x="15" y="45" width="25" height="8" fill="#ab47bc"/>
+                <rect x="35" y="72" width="30" height="4" fill="#fff"/>
+            </svg>
+            ヘリ
+        </button>
+
+        <button class="btn btn-ship" id="btn-ship">
+            <svg class="btn-icon" viewBox="0 0 100 100">
+                <path d="M 10 50 L 90 50 L 75 75 L 25 75 Z" fill="#00acc1"/>
+                <rect x="35" y="25" width="30" height="25" fill="#ffffff"/>
+                <rect x="55" y="15" width="8" height="10" fill="#e53935"/>
+            </svg>
+            ふね
         </button>
     </div>
 </div>
@@ -396,281 +485,306 @@
     function startTrainSound() {
         initAudio();
         stopSound();
-
         let count = 0;
         trainAudioInterval = setInterval(() => {
             if (!audioCtx) return;
-            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
             osc.type = 'triangle';
             osc.frequency.value = (count % 2 === 0) ? 120 : 95;
-
             gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.11);
-
             osc.connect(gain);
             gain.connect(audioCtx.destination);
-
             osc.start();
             osc.stop(audioCtx.currentTime + 0.11);
-
             count++;
         }, 210);
     }
 
-    let busAudioOsc = null;
-    let busAudioGain = null;
+    let carAudioInterval = null;
+    function startCarSound() {
+        initAudio();
+        stopSound();
+        carAudioInterval = setInterval(() => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.value = 90;
+            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.07);
+        }, 70);
+    }
+
+    let busAudioInterval = null;
     function startBusSound() {
         initAudio();
         stopSound();
-
-        busAudioOsc = audioCtx.createOscillator();
-        busAudioGain = audioCtx.createGain();
-
-        busAudioOsc.type = 'sawtooth';
-        busAudioOsc.frequency.setValueAtTime(60, audioCtx.currentTime);
-
-        busAudioGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 280;
-
-        busAudioOsc.connect(filter);
-        filter.connect(busAudioGain);
-        busAudioGain.connect(audioCtx.destination);
-
-        busAudioOsc.start();
+        busAudioInterval = setInterval(() => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.value = 65;
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.09);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.09);
+        }, 80);
     }
 
-    let planeAudioOsc = null;
-    let planeAudioGain = null;
-    function startPlaneSound() {
+    let shipAudioInterval = null;
+    function startShipSound() {
         initAudio();
         stopSound();
+        shipAudioInterval = setInterval(() => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = 50;
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }, 110);
+    }
 
-        planeAudioOsc = audioCtx.createOscillator();
-        planeAudioGain = audioCtx.createGain();
+    let skyAudioOsc = null;
+    let skyAudioGain = null;
+    function startSkySound(freq = 180) {
+        initAudio();
+        stopSound();
+        skyAudioOsc = audioCtx.createOscillator();
+        skyAudioGain = audioCtx.createGain();
+        skyAudioOsc.type = 'sine';
+        skyAudioOsc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        skyAudioGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        skyAudioOsc.connect(skyAudioGain);
+        skyAudioGain.connect(audioCtx.destination);
+        skyAudioOsc.start();
+    }
 
-        planeAudioOsc.type = 'sine';
-        // 飛行機らしい高めのジェット音フォーン
-        planeAudioOsc.frequency.setValueAtTime(180, audioCtx.currentTime);
-        planeAudioOsc.frequency.exponentialRampToValueAtTime(240, audioCtx.currentTime + 4);
-
-        planeAudioGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-
-        planeAudioOsc.connect(planeAudioGain);
-        planeAudioGain.connect(audioCtx.destination);
-
-        planeAudioOsc.start();
+    let heliAudioInterval = null;
+    function startHeliSound() {
+        initAudio();
+        stopSound();
+        heliAudioInterval = setInterval(() => {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 80;
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }, 90);
     }
 
     function stopSound() {
-        if (trainAudioInterval) {
-            clearInterval(trainAudioInterval);
-            trainAudioInterval = null;
-        }
-        if (busAudioOsc) {
-            try {
-                busAudioOsc.stop();
-                busAudioOsc.disconnect();
-            } catch(e) {}
-            busAudioOsc = null;
-        }
-        if (planeAudioOsc) {
-            try {
-                planeAudioOsc.stop();
-                planeAudioOsc.disconnect();
-            } catch(e) {}
-            planeAudioOsc = null;
-        }
+        if (trainAudioInterval) { clearInterval(trainAudioInterval); trainAudioInterval = null; }
+        if (carAudioInterval) { clearInterval(carAudioInterval); carAudioInterval = null; }
+        if (busAudioInterval) { clearInterval(busAudioInterval); busAudioInterval = null; }
+        if (shipAudioInterval) { clearInterval(shipAudioInterval); shipAudioInterval = null; }
+        if (heliAudioInterval) { clearInterval(heliAudioInterval); heliAudioInterval = null; }
+        if (skyAudioOsc) { try { skyAudioOsc.stop(); skyAudioOsc.disconnect(); } catch(e){} skyAudioOsc = null; }
     }
 
-
-    // --- 乗り物の生成とアニメーション ---
+    // --- 乗り物データの定義 ---
     const controls = document.getElementById('controls');
     const btnTrain = document.getElementById('btn-train');
     const btnBus = document.getElementById('btn-bus');
+    const btnCar = document.getElementById('btn-car');
     const btnPlane = document.getElementById('btn-plane');
+    const btnHeli = document.getElementById('btn-heli');
+    const btnShip = document.getElementById('btn-ship');
+
     const railwayEl = document.getElementById('railway');
     const roadEl = document.getElementById('road');
+    const seaEl = document.getElementById('sea');
     const skyEl = document.getElementById('sky');
 
     let isRunning = false;
     let animationFrameId = null;
 
-    // 青い8両編成電車SVG（全8両にパンタグラフ装着）
+    // 青い電車
     function createTrainSVG() {
-        const carWidth = 80;
-        const carHeight = 36;
-        const gap = 3;
-        const totalCars = 8;
+        const carWidth = 80, carHeight = 36, gap = 3, totalCars = 8;
         const totalWidth = (carWidth + gap) * totalCars;
-
         let svgHtml = `<svg id="active-vehicle" class="vehicle train-vehicle" width="${totalWidth}" height="60" style="left:-${totalWidth}px;">`;
-
         for (let i = 0; i < totalCars; i++) {
             const x = i * (carWidth + gap);
-            const isFirst = (i === totalCars - 1); // 右進行方向の先頭車両
-
-            // 車体（青）
+            const isFirst = (i === totalCars - 1);
             svgHtml += `<rect x="${x}" y="8" width="${carWidth}" height="${carHeight}" rx="5" fill="#1e90ff" stroke="#003d80" stroke-width="2"/>`;
-            
-            // 白帯
             svgHtml += `<rect x="${x}" y="28" width="${carWidth}" height="5" fill="#ffffff"/>`;
-
-            // 【ご要望1】全車（すべての車両）にパンタグラフを設置
             svgHtml += `<path d="M ${x + 28} 8 L ${x + 36} 1 L ${x + 44} 8" stroke="#333333" stroke-width="2" fill="none"/>`;
             svgHtml += `<line x1="${x + 24}" y1="1" x2="${x + 48}" y2="1" stroke="#333333" stroke-width="1.5"/>`;
-
-            // 窓
             const windowColor = "#e0f7fa";
             if (isFirst) {
-                // 運転席
                 svgHtml += `<path d="M ${x + 52} 13 L ${x + 74} 13 L ${x + 71} 24 L ${x + 52} 24 Z" fill="#ffffff" stroke="#333" stroke-width="1"/>`;
-                // ライト
                 svgHtml += `<circle cx="${x + 76}" cy="34" r="3" fill="#ffff00"/>`;
             } else {
                 svgHtml += `<rect x="${x + 54}" y="13" width="16" height="11" rx="2" fill="${windowColor}" stroke="#333" stroke-width="1"/>`;
             }
-
             svgHtml += `<rect x="${x + 10}" y="13" width="16" height="11" rx="2" fill="${windowColor}" stroke="#333" stroke-width="1"/>`;
             svgHtml += `<rect x="${x + 32}" y="13" width="16" height="11" rx="2" fill="${windowColor}" stroke="#333" stroke-width="1"/>`;
-
-            // 車輪
             const wheelY = 46;
-            svgHtml += `<circle cx="${x + 16}" cy="${wheelY}" r="5" fill="#222"/>`;
-            svgHtml += `<circle cx="${x + 16}" cy="${wheelY}" r="2" fill="#aaa"/>`;
-            svgHtml += `<circle cx="${x + 28}" cy="${wheelY}" r="5" fill="#222"/>`;
-            svgHtml += `<circle cx="${x + 28}" cy="${wheelY}" r="2" fill="#aaa"/>`;
-
-            svgHtml += `<circle cx="${x + carWidth - 28}" cy="${wheelY}" r="5" fill="#222"/>`;
-            svgHtml += `<circle cx="${x + carWidth - 28}" cy="${wheelY}" r="2" fill="#aaa"/>`;
-            svgHtml += `<circle cx="${x + carWidth - 16}" cy="${wheelY}" r="5" fill="#222"/>`;
-            svgHtml += `<circle cx="${x + carWidth - 16}" cy="${wheelY}" r="2" fill="#aaa"/>`;
-
-            // 連結部
-            if (i < totalCars - 1) {
-                svgHtml += `<rect x="${x + carWidth}" y="32" width="${gap}" height="4" fill="#333"/>`;
-            }
+            svgHtml += `<circle cx="${x + 16}" cy="${wheelY}" r="5" fill="#222"/><circle cx="${x + 16}" cy="${wheelY}" r="2" fill="#aaa"/>`;
+            svgHtml += `<circle cx="${x + 28}" cy="${wheelY}" r="5" fill="#222"/><circle cx="${x + 28}" cy="${wheelY}" r="2" fill="#aaa"/>`;
+            svgHtml += `<circle cx="${x + carWidth - 28}" cy="${wheelY}" r="5" fill="#222"/><circle cx="${x + carWidth - 28}" cy="${wheelY}" r="2" fill="#aaa"/>`;
+            svgHtml += `<circle cx="${x + carWidth - 16}" cy="${wheelY}" r="5" fill="#222"/><circle cx="${x + carWidth - 16}" cy="${wheelY}" r="2" fill="#aaa"/>`;
+            if (i < totalCars - 1) svgHtml += `<rect x="${x + carWidth}" y="32" width="${gap}" height="4" fill="#333"/>`;
         }
-
         svgHtml += `</svg>`;
         return { html: svgHtml, width: totalWidth, parent: railwayEl };
     }
 
-    // オレンジ色のバスSVG（【ご要望2】タイヤが下に飛び出すデザインへ修正）
+    // オレンジバス
     function createBusSVG() {
         const busWidth = 130;
-
-        // 高さ80pxのSVGキャンバス、ボディy=10~58、タイヤy=63（ボディ下端より下に飛び出す）
         let svgHtml = `<svg id="active-vehicle" class="vehicle bus-vehicle" width="${busWidth}" height="80" style="left:-${busWidth}px;">`;
-
-        // 車体ボディ
         svgHtml += `<rect x="5" y="10" width="${busWidth - 10}" height="48" rx="10" fill="#ff8c00" stroke="#cc6600" stroke-width="2.5"/>`;
-        
-        // 白帯
         svgHtml += `<rect x="5" y="38" width="${busWidth - 10}" height="7" fill="#ffffff"/>`;
-
-        // 窓
         svgHtml += `<path d="M 92 16 L 118 16 Q 120 16 120 22 L 120 34 L 92 34 Z" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
         svgHtml += `<rect x="15" y="16" width="22" height="18" rx="2" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
         svgHtml += `<rect x="41" y="16" width="22" height="18" rx="2" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
         svgHtml += `<rect x="67" y="16" width="22" height="18" rx="2" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
-
-        // 乗客シルエット
-        svgHtml += `<circle cx="26" cy="25" r="4" fill="#ffb74d"/>`;
-        svgHtml += `<circle cx="52" cy="25" r="4" fill="#4dd0e1"/>`;
-        svgHtml += `<circle cx="78" cy="25" r="4" fill="#ba68c8"/>`;
-
-        // ライト
         svgHtml += `<circle cx="121" cy="44" r="4" fill="#ffeb3b"/>`;
-
-        // タイヤハウス（ボディの削れ）
         svgHtml += `<path d="M 21 58 A 12 12 0 0 1 43 58 Z" fill="#555"/>`;
         svgHtml += `<path d="M 87 58 A 12 12 0 0 1 109 58 Z" fill="#555"/>`;
-
-        // タイヤ（ボディ下58pxを突き抜けてy=63pxを中心に半径12pxで配置）
         const wheelY = 63;
-        svgHtml += `<circle cx="98" cy="${wheelY}" r="12" fill="#222"/>`;
-        svgHtml += `<circle cx="98" cy="${wheelY}" r="5" fill="#ccc"/>`;
-        svgHtml += `<circle cx="32" cy="${wheelY}" r="12" fill="#222"/>`;
-        svgHtml += `<circle cx="32" cy="${wheelY}" r="5" fill="#ccc"/>`;
-
+        svgHtml += `<circle cx="98" cy="${wheelY}" r="12" fill="#222"/><circle cx="98" cy="${wheelY}" r="5" fill="#ccc"/>`;
+        svgHtml += `<circle cx="32" cy="${wheelY}" r="12" fill="#222"/><circle cx="32" cy="${wheelY}" r="5" fill="#ccc"/>`;
         svgHtml += `</svg>`;
         return { html: svgHtml, width: busWidth, parent: roadEl };
     }
 
-    // 【ご要望3】白と赤の飛行機SVG
+    // 赤いくるま（屋根を水平にし、窓もスクエア型に修正）
+    function createCarSVG() {
+        const carWidth = 90;
+        let svgHtml = `<svg id="active-vehicle" class="vehicle car-vehicle" width="${carWidth}" height="60" style="left:-${carWidth}px;">`;
+        // 水平なキャビン・屋根
+        svgHtml += `<rect x="20" y="14" width="48" height="20" rx="4" fill="#e53935" stroke="#b71c1c" stroke-width="2"/>`;
+        // ボディ
+        svgHtml += `<rect x="5" y="28" width="${carWidth - 10}" height="20" rx="5" fill="#e53935" stroke="#b71c1c" stroke-width="2"/>`;
+        // 水平な窓（フロント・リア）
+        svgHtml += `<rect x="46" y="17" width="18" height="12" rx="2" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
+        svgHtml += `<rect x="24" y="17" width="18" height="12" rx="2" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
+        // ライト
+        svgHtml += `<circle cx="82" cy="34" r="3" fill="#ffeb3b"/>`;
+        const wheelY = 48;
+        svgHtml += `<circle cx="24" cy="${wheelY}" r="9" fill="#222"/><circle cx="24" cy="${wheelY}" r="4" fill="#eee"/>`;
+        svgHtml += `<circle cx="66" cy="${wheelY}" r="9" fill="#222"/><circle cx="66" cy="${wheelY}" r="4" fill="#eee"/>`;
+        svgHtml += `</svg>`;
+        return { html: svgHtml, width: carWidth, parent: roadEl };
+    }
+
+    // ひこうき（主翼を斜め左向きに修正）
     function createPlaneSVG() {
         const planeWidth = 140;
-        const planeHeight = 70;
-
-        let svgHtml = `<svg id="active-vehicle" class="vehicle plane-vehicle" width="${planeWidth}" height="${planeHeight}" style="left:-${planeWidth}px;">`;
-
-        // 主翼（奥）
-        svgHtml += `<polygon points="60,25 90,5 105,5 80,25" fill="#d0d0d0" />`;
-
-        // 机体（ジェット旅客機風）
+        let svgHtml = `<svg id="active-vehicle" class="vehicle plane-vehicle" width="${planeWidth}" height="70" style="left:-${planeWidth}px;">`;
+        // 奥の主翼（斜め左向きに伸びる）
+        svgHtml += `<polygon points="95,25 75,5 90,5 110,25" fill="#d0d0d0" />`;
+        // 胴体
         svgHtml += `<path d="M 10 32 Q 60 18 130 30 Q 138 35 130 40 Q 60 48 10 38 Z" fill="#ffffff" stroke="#ccc" stroke-width="1"/>`;
-        
         // 尾翼
-        svgHtml += `<polygon points="15,32 5,8 24,8 35,33" fill="#ff3333"/>`;
-        
+        svgHtml += `<polygon points="10,32 5,8 20,8 28,33" fill="#ff3333"/>`;
         // 赤いストライプライン
         svgHtml += `<path d="M 30 35 Q 80 28 130 35 L 128 38 Q 80 32 30 37 Z" fill="#ff3333"/>`;
-
-        // 主翼（手前）
-        svgHtml += `<polygon points="50,37 75,65 95,65 75,37" fill="#ffffff" stroke="#bbb" stroke-width="1"/>`;
-
+        // 手前の主翼（斜め左向きに伸びる）
+        svgHtml += `<polygon points="85,37 60,65 80,65 105,37" fill="#ffffff" stroke="#bbb" stroke-width="1"/>`;
         // コックピット窓
         svgHtml += `<path d="M 115 30 Q 124 31 125 35 L 118 35 Z" fill="#333333"/>`;
-
-        // 客室の丸窓
         for(let i = 0; i < 6; i++) {
             svgHtml += `<circle cx="${45 + i * 11}" cy="33" r="2" fill="#666666"/>`;
         }
-
-        // ジェットエンジン
-        svgHtml += `<rect x="68" y="52" width="22" height="10" rx="4" fill="#888888"/>`;
-
         svgHtml += `</svg>`;
         return { html: svgHtml, width: planeWidth, parent: skyEl };
     }
 
+    // ヘリコプター
+    function createHeliSVG() {
+        const heliWidth = 110;
+        let svgHtml = `<svg id="active-vehicle" class="vehicle heli-vehicle" width="${heliWidth}" height="70" style="left:-${heliWidth}px;">`;
+        svgHtml += `<line x1="10" y1="10" x2="90" y2="10" stroke="#ffffff" stroke-width="4"/>`;
+        svgHtml += `<line x1="50" y1="10" x2="50" y2="20" stroke="#333" stroke-width="3"/>`;
+        svgHtml += `<path d="M 30 20 L 75 20 Q 95 20 95 40 Q 95 55 75 55 L 30 55 Q 15 55 15 40 Z" fill="#ab47bc" stroke="#4a148c" stroke-width="2"/>`;
+        svgHtml += `<path d="M 65 24 Q 90 24 90 40 L 65 40 Z" fill="#e0f7fa" stroke="#333" stroke-width="1"/>`;
+        svgHtml += `<rect x="0" y="32" width="25" height="7" fill="#ab47bc"/>`;
+        svgHtml += `<polygon points="0,25 6,35 0,45" fill="#ffffff"/>`;
+        svgHtml += `<line x1="30" y1="55" x2="30" y2="64" stroke="#333" stroke-width="2"/>`;
+        svgHtml += `<line x1="70" y1="55" x2="70" y2="64" stroke="#333" stroke-width="2"/>`;
+        svgHtml += `<line x1="20" y1="64" x2="80" y2="64" stroke="#333" stroke-width="3"/>`;
+        svgHtml += `</svg>`;
+        return { html: svgHtml, width: heliWidth, parent: skyEl };
+    }
+
+    // ふね（海の表面に綺麗に浮かんで見えるよう高さと要素配置を微調整）
+    function createShipSVG() {
+        const shipWidth = 130;
+        let svgHtml = `<svg id="active-vehicle" class="vehicle ship-vehicle" width="${shipWidth}" height="70" style="left:-${shipWidth}px;">`;
+        svgHtml += `<path d="M 10 30 L 120 30 Q 110 55 90 55 L 25 55 Z" fill="#00acc1" stroke="#006064" stroke-width="2"/>`;
+        svgHtml += `<rect x="10" y="25" width="110" height="5" fill="#ffffff"/>`;
+        svgHtml += `<rect x="35" y="8" width="45" height="17" fill="#ffffff" stroke="#ccc" stroke-width="1" rx="2"/>`;
+        svgHtml += `<circle cx="48" cy="16" r="3" fill="#00acc1"/>`;
+        svgHtml += `<circle cx="60" cy="16" r="3" fill="#00acc1"/>`;
+        svgHtml += `<circle cx="72" cy="16" r="3" fill="#00acc1"/>`;
+        svgHtml += `<rect x="65" y="0" width="8" height="9" fill="#e53935"/>`;
+        svgHtml += `<path d="M 25 55 Q 15 50 5 35" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.8"/>`;
+        svgHtml += `</svg>`;
+        return { html: svgHtml, width: shipWidth, parent: seaEl };
+    }
+
     function runVehicle(type) {
         if (isRunning) return;
+        
+        // 最初の操作で必ずオーディオコンテキストを起動
+        initAudio();
+        
         isRunning = true;
 
         controls.classList.add('hidden');
 
         let vehicleData;
-        if (type === 'train') {
-            vehicleData = createTrainSVG();
-        } else if (type === 'bus') {
-            vehicleData = createBusSVG();
-        } else {
-            vehicleData = createPlaneSVG();
-        }
-        
+        if (type === 'train') vehicleData = createTrainSVG();
+        else if (type === 'bus') vehicleData = createBusSVG();
+        else if (type === 'car') vehicleData = createCarSVG();
+        else if (type === 'plane') vehicleData = createPlaneSVG();
+        else if (type === 'heli') vehicleData = createHeliSVG();
+        else if (type === 'ship') vehicleData = createShipSVG();
+
         vehicleData.parent.insertAdjacentHTML('beforeend', vehicleData.html);
 
         const vehicleEl = document.getElementById('active-vehicle');
         const screenWidth = window.innerWidth;
         const totalDistance = screenWidth + vehicleData.width;
 
-        const duration = (type === 'train') ? 8500 : (type === 'bus' ? 7000 : 6000); 
+        let duration = 7500;
+        if (type === 'train') duration = 8500;
+        if (type === 'car') duration = 5500;
+        if (type === 'plane') duration = 6000;
+        if (type === 'ship') duration = 9000;
+
         let startTime = null;
 
-        if (type === 'train') {
-            startTrainSound();
-        } else if (type === 'bus') {
-            startBusSound();
-        } else {
-            startPlaneSound();
-        }
+        if (type === 'train') startTrainSound();
+        else if (type === 'bus') startBusSound();
+        else if (type === 'car') startCarSound();
+        else if (type === 'plane') startSkySound(180);
+        else if (type === 'heli') startHeliSound();
+        else if (type === 'ship') startShipSound();
 
         function animate(currentTime) {
             if (!startTime) startTime = currentTime;
@@ -681,9 +795,12 @@
                 const currentX = -vehicleData.width + (totalDistance * progress);
                 vehicleEl.style.left = `${currentX}px`;
 
-                // 飛行機だけ少し上下に揺れながら前進
-                if (type === 'plane') {
-                    const waveY = Math.sin(progress * Math.PI * 4) * 8;
+                if (type === 'plane' || type === 'heli') {
+                    const waveY = Math.sin(progress * Math.PI * 4) * 6;
+                    vehicleEl.style.transform = `translateY(${waveY}px)`;
+                }
+                if (type === 'ship') {
+                    const waveY = Math.sin(progress * Math.PI * 8) * 3;
                     vehicleEl.style.transform = `translateY(${waveY}px)`;
                 }
 
@@ -704,25 +821,27 @@
         isRunning = false;
         controls.classList.remove('hidden');
     }
+    btnTrain.addEventListener('click', () => { initAudio(); runVehicle('train'); });
+    btnBus.addEventListener('click', () => { initAudio(); runVehicle('bus'); });
+    btnCar.addEventListener('click', () => { initAudio(); runVehicle('car'); });
+    btnPlane.addEventListener('click', () => { initAudio(); runVehicle('plane'); });
+    btnHeli.addEventListener('click', () => { initAudio(); runVehicle('heli'); });
+    btnShip.addEventListener('click', () => { initAudio(); runVehicle('ship'); });
 
-    btnTrain.addEventListener('click', () => runVehicle('train'));
-    btnBus.addEventListener('click', () => runVehicle('bus'));
-    btnPlane.addEventListener('click', () => runVehicle('plane'));
+    const addTouch = (btn, type) => {
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            initAudio();
+            runVehicle(type);
+        }, {passive: false});
+    };
 
-    btnTrain.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        runVehicle('train');
-    }, {passive: false});
-
-    btnBus.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        runVehicle('bus');
-    }, {passive: false});
-
-    btnPlane.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        runVehicle('plane');
-    }, {passive: false});
+    addTouch(btnTrain, 'train');
+    addTouch(btnBus, 'bus');
+    addTouch(btnCar, 'car');
+    addTouch(btnPlane, 'plane');
+    addTouch(btnHeli, 'heli');
+    addTouch(btnShip, 'ship');
 
     window.addEventListener('resize', () => {
         if (!isRunning) {
