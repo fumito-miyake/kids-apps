@@ -54,7 +54,7 @@
             left: 125px;
             width: 50px;
             height: 80px;
-            z-index: 10; /* 車を横断歩道や線路より上に設定 */
+            z-index: 10;
         }
         .ui-top {
             position: absolute;
@@ -80,7 +80,8 @@
         }
         .controls-container {
             position: absolute;
-            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            /* 丸ボタンの半分（40px）分上に引き上げ */
+            bottom: calc(60px + env(safe-area-inset-bottom, 0px));
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -127,7 +128,7 @@
             position: absolute;
             width: 300px;
             height: 120px;
-            z-index: 5; /* コンテナ全体を車(10)より低く設定 */
+            z-index: 5;
             left: 0;
             overflow: visible;
         }
@@ -141,7 +142,7 @@
             display: flex;
             justify-content: space-around;
             pointer-events: none;
-            z-index: 1; /* 横断歩道や線路本体は車の下になるように低く設定 */
+            z-index: 1; 
         }
 
         .crosswalk-line {
@@ -641,4 +642,3 @@
 </script>
 </body>
 </html>
-
