@@ -3,76 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>たしざんアプリ</title>
-    <!-- Tailwind CSS for clean layout -->
+    <title>りんごのたしざん</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Animate.css for subtle interactive animations -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- Google Fonts: 子供向けに丸みのある読みやすいフォント -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap');
-        
         body {
-            font-family: 'Kosugi Maru', cursive, sans-serif;
-            background-color: #fefce8;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: #fffbeb;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
-        /* プレート（お皿）の立体感 */
+        /* お皿の立体感とデザイン */
         .plate {
-            background: radial-gradient(circle, #ffffff 60%, #e2e8f0 100%);
-            border: 6px solid #cbd5e1;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+            background: radial-gradient(circle at 50% 45%, #ffffff 60%, #f1f5f9 85%, #e2e8f0 100%);
+            box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.1), inset 0 -4px 8px rgba(0, 0, 0, 0.05);
+            border: 3px solid #cbd5e1;
         }
 
-        /* りんごボタンとアイコンのスタイリング */
-        .apple-btn {
-            transition: transform 0.1s ease, filter 0.1s ease;
-            filter: drop-shadow(0 4px 3px rgba(0,0,0,0.15));
-        }
-        .apple-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* 100のりんご（きんいろ/黄） */
-        .apple-100 {
-            background: radial-gradient(circle at 35% 35%, #fef08a, #eab308);
-        }
-        /* 10のりんご（みどり/青りんご） */
-        .apple-10 {
-            background: radial-gradient(circle at 35% 35%, #86efac, #22c55e);
-        }
-        /* 1のりんご（あか/赤りんご） */
+        /* りんごのグラデーションと立体感 */
         .apple-1 {
-            background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444);
+            background: radial-gradient(circle at 30% 30%, #ff7675, #d63031);
+            box-shadow: 0 3px 6px rgba(214, 48, 49, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.2);
         }
-        /* 1000のりんご（むらさき/スペシャルりんご：答えが1000以上になった時用） */
+        .apple-10 {
+            background: radial-gradient(circle at 30% 30%, #55efc4, #00b894);
+            box-shadow: 0 3px 6px rgba(0, 184, 148, 0.35), inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .apple-100 {
+            background: radial-gradient(circle at 30% 30%, #ffeaa7, #fdcb6e);
+            box-shadow: 0 3px 6px rgba(253, 203, 110, 0.45), inset 0 -2px 4px rgba(0, 0, 0, 0.15);
+        }
         .apple-1000 {
-            background: radial-gradient(circle at 35% 35%, #d8b4fe, #9333ea);
+            background: radial-gradient(circle at 30% 30%, #a29bfe, #6c5ce7);
+            box-shadow: 0 3px 6px rgba(108, 92, 231, 0.4), inset 0 -2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* りんごの葉っぱ */
+        /* りんごの葉っぱとくき */
         .apple-leaf {
             position: absolute;
-            top: -4px;
-            right: 20%;
-            width: 12px;
-            height: 8px;
-            background-color: #15803d;
+            top: -3px;
+            right: 22%;
+            width: 11px;
+            height: 7px;
+            background-color: #2ecc71;
             border-radius: 10px 0 10px 0;
-            transform: rotate(-15deg);
+            transform: rotate(-20deg);
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            pointer-events: none;
         }
-
-        /* くき */
         .apple-stem {
             position: absolute;
-            top: -6px;
+            top: -5px;
             left: 50%;
             transform: translateX(-50%);
             width: 3px;
-            height: 8px;
-            background-color: #78350f;
+            height: 7px;
+            background-color: #795548;
             border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* りんごが多いときの縮小用（葉っぱとくきも比例縮小） */
+        .apple-compact .apple-leaf {
+            width: 8px;
+            height: 5px;
+            top: -2px;
+        }
+        .apple-compact .apple-stem {
+            width: 2px;
+            height: 5px;
+            top: -4px;
         }
 
         /* くりあがりアニメーション */
@@ -88,16 +94,15 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-start p-2 sm:p-3 pb-6 sm:pb-10 text-slate-800 overflow-y-auto">
 
-    <!-- ヘッダー / 式表示エリア -->
-    <header class="w-full max-w-6xl bg-white rounded-2xl p-1.5 sm:p-2.5 shadow-md border-4 border-amber-200 text-center shrink-0 flex flex-row items-center justify-between gap-2">
-        
-        <!-- 数式テキスト表示 -->
-        <div class="flex items-center justify-center gap-2 sm:gap-3 text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wider pl-2 sm:pl-4">
-            <span id="num1-text" class="text-rose-500">0</span>
-            <span class="text-slate-400">＋</span>
-            <span id="num2-text" class="text-emerald-500">0</span>
-            <span class="text-slate-400">＝</span>
-            <span id="ans-text" class="text-amber-500">0</span>
+    <!-- ヘッダー：式表示とよみあげボタン -->
+    <header class="w-full max-w-6xl bg-white rounded-2xl shadow-md border-2 border-amber-200 px-3 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between gap-2 shrink-0">
+        <!-- 式の表示 -->
+        <div class="flex items-center justify-center flex-1 text-xl sm:text-3xl md:text-4xl font-extrabold tracking-wider text-slate-700 gap-1.5 sm:gap-3">
+            <span id="num1-text" class="text-rose-500 min-w-[2ch] text-right">0</span>
+            <span class="text-amber-400">＋</span>
+            <span id="num2-text" class="text-emerald-600 min-w-[2ch] text-right">0</span>
+            <span class="text-amber-400">＝</span>
+            <span id="ans-text" class="text-amber-600 bg-amber-100 px-2.5 py-0.5 sm:px-4 sm:py-1 rounded-xl border-2 border-amber-300 min-w-[2.5ch] text-center">0</span>
         </div>
 
         <!-- 音声よみあげボタン -->
@@ -109,44 +114,45 @@
         </button>
     </header>
 
-    <!-- メインコンテンツ：1項目 ＋ 2項目 ＝ こたえ（横3列並び） -->
-    <main class="w-full max-w-6xl flex-none landscape:flex-1 flex flex-row items-stretch justify-between gap-1 sm:gap-2 mt-2 px-0.5">
+    <!-- メインコンテンツ：1項目 ＋ 2項目 ＝ こたえ（横3列並び・高さ固定） -->
+    <main class="w-full max-w-6xl flex-none flex flex-row items-stretch justify-between gap-1 sm:gap-2 mt-2 px-0.5">
         
-        <!-- お皿 1 -->
-        <section class="flex-1 min-w-0 min-h-[240px] max-h-[340px] flex flex-col justify-between items-center bg-amber-100/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-amber-200">
+        <!-- お皿 1（りんご2行分の高さで固定） -->
+        <section class="flex-1 min-w-0 h-[225px] sm:h-[255px] md:h-[290px] flex flex-col justify-between items-center bg-amber-100/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-amber-200">
             <!-- 皿の上領域 -->
-            <div class="plate w-full flex-1 min-h-[120px] rounded-full flex flex-col justify-center items-center relative p-1.5 sm:p-2 overflow-hidden">
+            <div class="plate w-full flex-1 rounded-full flex flex-col justify-center items-center relative p-1.5 sm:p-2 overflow-hidden">
                 <!-- 数字表示用バッジ -->
                 <div class="absolute top-1 bg-white/95 px-2 py-0.5 rounded-full border border-rose-300 shadow-sm text-sm sm:text-base md:text-lg font-bold text-rose-500 z-10" id="plate1-count">
                     0
                 </div>
 
-                <!-- りんごが並ぶ領域 -->
-                <div id="plate1-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-y-auto">
+                <!-- りんごが並ぶ領域（2行固定・はみ出し防止） -->
+                <div id="plate1-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-hidden">
                     <!-- りんご動的追加 -->
                 </div>
             </div>
 
             <!-- 操作ボタンエリア（下部） -->
             <div class="mt-1.5 sm:mt-2 flex flex-col items-center gap-1 sm:gap-1.5 w-full shrink-0">
-                <!-- りんご追加ボタン -->
-                <div class="flex justify-center gap-1 sm:gap-2 w-full">
-                    <button onclick="addApple(1, 100)" class="apple-btn apple-100 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-slate-800 font-extrabold text-[11px] sm:text-xs md:text-base shadow-md border-2 border-yellow-300">
+                <!-- 100, 10, 1 入力りんご -->
+                <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                    <button onclick="addApple(1, 100)" class="apple-100 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-800 font-extrabold text-xs sm:text-sm transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        100
+                        <span>100</span>
                     </button>
-                    <button onclick="addApple(1, 10)" class="apple-btn apple-10 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-emerald-950 font-extrabold text-xs sm:text-sm md:text-base shadow-md border-2 border-green-300">
+                    <button onclick="addApple(1, 10)" class="apple-10 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-emerald-950 font-extrabold text-sm sm:text-base transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        10
+                        <span>10</span>
                     </button>
-                    <button onclick="addApple(1, 1)" class="apple-btn apple-1 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white font-extrabold text-sm sm:text-base md:text-lg shadow-md border-2 border-red-300">
+                    <button onclick="addApple(1, 1)" class="apple-1 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white font-extrabold text-base sm:text-lg transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        1
+                        <span>1</span>
                     </button>
                 </div>
+
                 <!-- へらすボタン -->
                 <button onclick="removeApple(1)" class="bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold px-3 py-0.5 sm:px-4 sm:py-1 rounded-full border-2 border-rose-300 text-xs sm:text-sm shadow-sm transition active:scale-95">
                     へらす
@@ -157,41 +163,42 @@
         <!-- ＋記号 -->
         <div class="flex items-center justify-center text-xl sm:text-2xl md:text-3xl font-black text-amber-400 font-sans shrink-0">＋</div>
 
-        <!-- お皿 2 -->
-        <section class="flex-1 min-w-0 min-h-[240px] max-h-[340px] flex flex-col justify-between items-center bg-emerald-100/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-emerald-200">
+        <!-- お皿 2（りんご2行分の高さで固定） -->
+        <section class="flex-1 min-w-0 h-[225px] sm:h-[255px] md:h-[290px] flex flex-col justify-between items-center bg-emerald-100/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-emerald-200">
             <!-- 皿の上領域 -->
-            <div class="plate w-full flex-1 min-h-[120px] rounded-full flex flex-col justify-center items-center relative p-1.5 sm:p-2 overflow-hidden">
+            <div class="plate w-full flex-1 rounded-full flex flex-col justify-center items-center relative p-1.5 sm:p-2 overflow-hidden">
                 <!-- 数字表示用バッジ -->
                 <div class="absolute top-1 bg-white/95 px-2 py-0.5 rounded-full border border-emerald-300 shadow-sm text-sm sm:text-base md:text-lg font-bold text-emerald-600 z-10" id="plate2-count">
                     0
                 </div>
 
-                <!-- りんごが並ぶ領域 -->
-                <div id="plate2-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-y-auto">
+                <!-- りんごが並ぶ領域（2行固定・はみ出し防止） -->
+                <div id="plate2-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-hidden">
                     <!-- りんご動的追加 -->
                 </div>
             </div>
 
             <!-- 操作ボタンエリア（下部） -->
             <div class="mt-1.5 sm:mt-2 flex flex-col items-center gap-1 sm:gap-1.5 w-full shrink-0">
-                <!-- りんご追加ボタン -->
-                <div class="flex justify-center gap-1 sm:gap-2 w-full">
-                    <button onclick="addApple(2, 100)" class="apple-btn apple-100 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-slate-800 font-extrabold text-[11px] sm:text-xs md:text-base shadow-md border-2 border-yellow-300">
+                <!-- 100, 10, 1 入力りんご -->
+                <div class="flex items-center justify-center gap-1.5 sm:gap-2.5">
+                    <button onclick="addApple(2, 100)" class="apple-100 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-800 font-extrabold text-xs sm:text-sm transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        100
+                        <span>100</span>
                     </button>
-                    <button onclick="addApple(2, 10)" class="apple-btn apple-10 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-emerald-950 font-extrabold text-xs sm:text-sm md:text-base shadow-md border-2 border-green-300">
+                    <button onclick="addApple(2, 10)" class="apple-10 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-emerald-950 font-extrabold text-sm sm:text-base transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        10
+                        <span>10</span>
                     </button>
-                    <button onclick="addApple(2, 1)" class="apple-btn apple-1 relative w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white font-extrabold text-sm sm:text-base md:text-lg shadow-md border-2 border-red-300">
+                    <button onclick="addApple(2, 1)" class="apple-1 relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-white font-extrabold text-base sm:text-lg transform active:scale-90 transition cursor-pointer">
                         <div class="apple-stem"></div>
                         <div class="apple-leaf"></div>
-                        1
+                        <span>1</span>
                     </button>
                 </div>
+
                 <!-- へらすボタン -->
                 <button onclick="removeApple(2)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold px-3 py-0.5 sm:px-4 sm:py-1 rounded-full border-2 border-emerald-300 text-xs sm:text-sm shadow-sm transition active:scale-95">
                     へらす
@@ -202,10 +209,10 @@
         <!-- ＝記号 -->
         <div class="flex items-center justify-center text-xl sm:text-2xl md:text-3xl font-black text-amber-400 font-sans shrink-0">＝</div>
 
-        <!-- こたえエリア（お皿の枠を下に広げ、ぜんぶけすボタンの下端を2項の枠の下端と揃える） -->
-        <div class="flex-1 min-w-0 min-h-[240px] max-h-[340px] flex flex-col justify-between items-center gap-1.5 sm:gap-2">
+        <!-- こたえエリア（りんご3行分の高さで固定・下端を2項と揃える） -->
+        <div class="flex-1 min-w-0 h-[225px] sm:h-[255px] md:h-[290px] flex flex-col justify-between items-center gap-1.5 sm:gap-2">
             <!-- 枠（残り高さいっぱいに広げる） -->
-            <section class="w-full flex-1 min-h-[120px] flex flex-col items-center justify-center bg-amber-200/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-amber-300">
+            <section class="w-full flex-1 flex flex-col items-center justify-center bg-amber-200/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-amber-300 overflow-hidden">
                 <!-- 皿の上領域 -->
                 <div class="plate w-full h-full rounded-full flex flex-col justify-center items-center relative p-1.5 sm:p-2 overflow-hidden border-amber-300">
                     <!-- 数字表示用バッジ -->
@@ -213,151 +220,192 @@
                         0
                     </div>
 
-                    <!-- りんごが並ぶ領域 -->
-                    <div id="plate-ans-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-y-auto">
+                    <!-- りんごが並ぶ領域（3行固定・はみ出し防止） -->
+                    <div id="plate-ans-apples" class="w-full h-full flex flex-wrap content-center justify-center gap-0.5 sm:gap-1 p-1 pt-6 sm:pt-7 overflow-hidden">
                         <!-- こたえのりんご動的追加 -->
                     </div>
                 </div>
             </section>
 
             <!-- 枠の外（最下部）にぜんぶけすボタンを配置し、下端を揃える -->
-            <div class="shrink-0 flex items-center justify-center w-full">
-                <button onclick="resetAll()" class="bg-white/95 hover:bg-white text-slate-600 font-bold px-4 py-1 sm:px-6 sm:py-1.5 rounded-full border-2 border-slate-300 shadow-sm text-xs sm:text-sm md:text-base transition active:scale-95">
-                    ぜんぶけす
-                </button>
-            </div>
+            <button onclick="resetAll()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1.5 sm:py-2 rounded-xl border-2 border-slate-300 shadow-sm text-xs sm:text-sm transition active:scale-95 shrink-0">
+                ぜんぶけす
+            </button>
         </div>
 
     </main>
 
-    <!-- JavaScript Logic -->
     <script>
-        // お皿ごとの桁別りんごの数
+        // 状態管理（お皿1とお皿2のそれぞれの桁のりんご数）
         const state = {
             1: { 100: 0, 10: 0, 1: 0 },
             2: { 100: 0, 10: 0, 1: 0 }
         };
 
-        // Web Audio API による効果音再生
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // 効果音用 Web Audio API コンテキスト
+        let audioCtx = null;
 
-        function playPopSound(pitchMultiplier = 1) {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+        function playPopSound(pitchMultiplier = 1.0) {
+            try {
+                // 読み上げ中なら効果音は鳴らさず音声干渉を防ぐ
+                if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                    return;
+                }
+
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                
+                const now = audioCtx.currentTime;
+                osc.frequency.setValueAtTime(320 * pitchMultiplier, now);
+                osc.frequency.exponentialRampToValueAtTime(600 * pitchMultiplier, now + 0.08);
+                
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.09);
+            } catch (e) {
+                // 音声再生エラーは無視
             }
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(300 * pitchMultiplier, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(600 * pitchMultiplier, audioCtx.currentTime + 0.08);
-
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.08);
         }
 
         function playCarrySound() {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            try {
+                if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                    return;
+                }
+
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // ド・ミ・ソ・高いド
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    
+                    const startTime = now + idx * 0.05;
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    
+                    gain.gain.setValueAtTime(0.10, startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.16);
+                });
+            } catch (e) {
+                // 音声再生エラーは無視
             }
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.setValueAtTime(600, now + 0.1);
-            osc.frequency.setValueAtTime(800, now + 0.2);
-
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(now + 0.35);
         }
 
-        // りんごを追加する関数
+        // りんごを追加する（くりあがり処理つき）
         function addApple(plateId, value) {
-            state[plateId][value]++;
-            playPopSound(value === 100 ? 1.5 : value === 10 ? 1.2 : 1.0);
-            
-            // くりあがり判定
-            checkCarryOver(plateId);
-            
-            // 画面描画更新
-            renderPlate(plateId);
-            updateMath();
-        }
-
-        // 最後のりんごを1つ削除する（へらす）
-        function removeApple(plateId) {
-            const current = state[plateId];
-            if (current[1] > 0) {
-                current[1]--;
-            } else if (current[10] > 0) {
-                current[10]--;
-            } else if (current[100] > 0) {
-                current[100]--;
-            } else {
-                return; // なにも減らせない
+            // 100の位が9個以上のときはそれ以上増やさない（最大999まで）
+            if (value === 100 && state[plateId][100] >= 9) {
+                playPopSound(0.6);
+                return;
             }
-            playPopSound(0.7);
-            renderPlate(plateId);
-            updateMath();
-        }
 
-        // くりあがり処理（10個集まったら上の桁へ）
-        function checkCarryOver(plateId) {
+            state[plateId][value]++;
             let carried = false;
-            // 1のりんごが10個以上
+
+            // 1の位が10個になったら10の位へくりあがり
             if (state[plateId][1] >= 10) {
                 state[plateId][1] -= 10;
-                state[plateId][10] += 1;
+                state[plateId][10]++;
                 carried = true;
             }
-            // 10のりんごが10個以上
+
+            // 10の位が10個になったら100の位へくりあがり
             if (state[plateId][10] >= 10) {
-                state[plateId][10] -= 10;
-                state[plateId][100] += 1;
-                carried = true;
-            }
-            // 100のりんごの上限（900までに制限）
-            if (state[plateId][100] > 9) {
-                state[plateId][100] = 9;
+                if (state[plateId][100] < 9) {
+                    state[plateId][10] -= 10;
+                    state[plateId][100]++;
+                    carried = true;
+                } else {
+                    // 999を超える場合は10の位を9に戻す
+                    state[plateId][10] = 9;
+                }
             }
 
             if (carried) {
                 playCarrySound();
+            } else {
+                const pitch = value === 100 ? 0.8 : (value === 10 ? 1.0 : 1.2);
+                playPopSound(pitch);
             }
+
+            renderPlate(plateId, carried);
+            updateMath();
         }
 
-        // お皿の描画を更新（チカチカしないように軽量アニメーションで生成）
-        function renderPlate(plateId) {
+        // りんごを1つ減らす（一番小さい桁から減らす）
+        function removeApple(plateId) {
+            const counts = state[plateId];
+            if (counts[1] > 0) {
+                counts[1]--;
+                playPopSound(0.7);
+            } else if (counts[10] > 0) {
+                counts[10]--;
+                playPopSound(0.7);
+            } else if (counts[100] > 0) {
+                counts[100]--;
+                playPopSound(0.7);
+            } else {
+                return;
+            }
+
+            renderPlate(plateId, false);
+            updateMath();
+        }
+
+        // お皿の描画を更新（収まらない個数になったらサイズを縮小）
+        function renderPlate(plateId, withCarryAnim = false) {
             const container = document.getElementById(`plate${plateId}-apples`);
             container.innerHTML = '';
 
             const counts = state[plateId];
+            const totalApples = counts[100] + counts[10] + counts[1];
+            
+            // 2行のお皿に収まらない個数（目安：9個以上）なら縮小モードにする
+            const isCompact = totalApples >= 9;
+            const isSuperCompact = totalApples >= 17;
+            const sizeMode = isSuperCompact ? 'super' : (isCompact ? 'compact' : 'normal');
 
             // 100のりんご
             for (let i = 0; i < counts[100]; i++) {
-                container.appendChild(createAppleElement(100));
+                const el = createAppleElement(100, sizeMode);
+                if (withCarryAnim && i === counts[100] - 1) el.classList.add('animate-merge');
+                container.appendChild(el);
             }
             // 10のりんご
             for (let i = 0; i < counts[10]; i++) {
-                container.appendChild(createAppleElement(10));
+                const el = createAppleElement(10, sizeMode);
+                if (withCarryAnim && i === counts[10] - 1) el.classList.add('animate-merge');
+                container.appendChild(el);
             }
             // 1のりんご
             for (let i = 0; i < counts[1]; i++) {
-                container.appendChild(createAppleElement(1));
+                container.appendChild(createAppleElement(1, sizeMode));
             }
 
             // 数字バッジ更新
@@ -365,19 +413,36 @@
             document.getElementById(`plate${plateId}-count`).textContent = total;
         }
 
-        // りんごエレメントの生成
-        function createAppleElement(value) {
+        // りんごエレメントの生成（sizeMode: 'normal' | 'compact' | 'super'）
+        function createAppleElement(value, sizeMode = 'normal') {
             const div = document.createElement('div');
-            div.className = `apple-btn apple-${value} relative w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center font-bold shadow-sm transition-transform duration-100`;
             
-            if (value === 1000) {
-                div.classList.add('text-white', 'text-[8px]', 'sm:text-[9px]', 'md:text-[11px]');
-            } else if (value === 100) {
-                div.classList.add('text-slate-800', 'text-[9px]', 'sm:text-[10px]', 'md:text-xs');
-            } else if (value === 10) {
-                div.classList.add('text-emerald-950', 'text-[10px]', 'sm:text-xs', 'md:text-sm');
+            let sizeClasses = 'w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9';
+            if (sizeMode === 'compact') {
+                sizeClasses = 'apple-compact w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6';
+            } else if (sizeMode === 'super') {
+                sizeClasses = 'apple-compact w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5';
+            }
+
+            div.className = `apple-btn apple-${value} relative ${sizeClasses} rounded-full flex items-center justify-center font-bold shadow-sm transition-transform duration-100 shrink-0`;
+            
+            if (sizeMode === 'super') {
+                div.classList.add(value === 100 ? 'text-slate-900' : 'text-white', 'text-[7px]', 'sm:text-[8px]');
+            } else if (sizeMode === 'compact') {
+                if (value === 1000) div.classList.add('text-white', 'text-[7px]', 'sm:text-[8px]');
+                else if (value === 100) div.classList.add('text-slate-800', 'text-[8px]', 'sm:text-[9px]');
+                else if (value === 10) div.classList.add('text-emerald-950', 'text-[9px]', 'sm:text-[10px]');
+                else div.classList.add('text-white', 'text-[10px]', 'sm:text-xs');
             } else {
-                div.classList.add('text-white', 'text-xs', 'sm:text-sm', 'md:text-base');
+                if (value === 1000) {
+                    div.classList.add('text-white', 'text-[8px]', 'sm:text-[9px]', 'md:text-[11px]');
+                } else if (value === 100) {
+                    div.classList.add('text-slate-800', 'text-[9px]', 'sm:text-[10px]', 'md:text-xs');
+                } else if (value === 10) {
+                    div.classList.add('text-emerald-950', 'text-[10px]', 'sm:text-xs', 'md:text-sm');
+                } else {
+                    div.classList.add('text-white', 'text-xs', 'sm:text-sm', 'md:text-base');
+                }
             }
 
             div.innerHTML = `
@@ -411,10 +476,14 @@
             const c10 = Math.floor((ans % 100) / 10);
             const c1 = ans % 10;
 
-            for (let i = 0; i < c1000; i++) ansContainer.appendChild(createAppleElement(1000));
-            for (let i = 0; i < c100; i++) ansContainer.appendChild(createAppleElement(100));
-            for (let i = 0; i < c10; i++) ansContainer.appendChild(createAppleElement(10));
-            for (let i = 0; i < c1; i++) ansContainer.appendChild(createAppleElement(1));
+            const totalAnsApples = c1000 + c100 + c10 + c1;
+            // こたえのお皿は3行分あるので、13個以上でコンパクト化、22個以上で超コンパクト化
+            const sizeMode = totalAnsApples >= 22 ? 'super' : (totalAnsApples >= 13 ? 'compact' : 'normal');
+
+            for (let i = 0; i < c1000; i++) ansContainer.appendChild(createAppleElement(1000, sizeMode));
+            for (let i = 0; i < c100; i++) ansContainer.appendChild(createAppleElement(100, sizeMode));
+            for (let i = 0; i < c10; i++) ansContainer.appendChild(createAppleElement(10, sizeMode));
+            for (let i = 0; i < c1; i++) ansContainer.appendChild(createAppleElement(1, sizeMode));
         }
 
         // ぜんぶクリア
@@ -427,37 +496,78 @@
             playPopSound(0.5);
         }
 
-        // 音声読み上げ機能 (Web Speech API)
-        function speakEquation() {
+        // 音声リストの事前読み込み（ローカル・高品質音声を優先）
+        let jpVoice = null;
+        function loadVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return;
+
+            // 音割れしやすいネットワーク音声よりも端末標準（localService）の自然な日本語音声を優先
+            jpVoice = voices.find(v => v.lang.includes('ja') && v.localService && (v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Haruka') || v.name.includes('Ichiro') || v.name.includes('Ayumi')))
+                   || voices.find(v => v.lang.includes('ja') && v.localService)
+                   || voices.find(v => v.lang.includes('ja'));
+        }
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // 音声読み上げ機能（オーディオ競合とデジタル音割れを完全に防止）
+        async function speakEquation() {
             if (!('speechSynthesis' in window)) {
                 return;
             }
 
-            // 現在の発話をキャンセル
+            // 1. Web Audio API の出力を一時停止してオーディオチャンネルの干渉（ビリビリ音）を止める
+            if (audioCtx && audioCtx.state === 'running') {
+                try {
+                    await audioCtx.suspend();
+                } catch (e) {}
+            }
+
+            // 2. 現在の発話を完全にリセット
             window.speechSynthesis.cancel();
 
             const num1 = state[1][100] * 100 + state[1][10] * 10 + state[1][1];
             const num2 = state[2][100] * 100 + state[2][10] * 10 + state[2][1];
             const ans = num1 + num2;
 
-            const text = `${num1} たす ${num2} は ${ans} です。`;
+            // 読み間違いや不自然なイントネーションを防ぐ自然なフレーズ
+            const text = `${num1} たす ${num2} は、 ${ans}`;
 
-            const uttr = new SpeechSynthesisUtterance(text);
-            uttr.lang = 'ja-JP';
-            uttr.rate = 0.85; 
-            uttr.pitch = 1.2; 
+            // 3. オーディオセッションの切り替え完了を待ってから再生（120ms）
+            setTimeout(() => {
+                if (!jpVoice) loadVoices();
 
-            const btn = document.getElementById('speak-btn');
-            btn.classList.add('scale-105', 'ring-4', 'ring-amber-300');
-            uttr.onend = () => {
-                btn.classList.remove('scale-105', 'ring-4', 'ring-amber-300');
-            };
+                const uttr = new SpeechSynthesisUtterance(text);
+                uttr.lang = 'ja-JP';
+                if (jpVoice) {
+                    uttr.voice = jpVoice;
+                }
+                // 音声合成エンジンのリサンプリング歪み（ビリビリ音）を防ぐため等倍速・等ピッチに設定
+                uttr.rate = 1.0;
+                uttr.pitch = 1.0;
+                // 最大音量(1.0)でのクリッピング（音割れ）を防ぐため少し余裕を持たせる
+                uttr.volume = 0.85;
 
-            window.speechSynthesis.speak(uttr);
+                const btn = document.getElementById('speak-btn');
+                btn.classList.add('scale-105', 'ring-4', 'ring-amber-300');
+                
+                const cleanup = () => {
+                    btn.classList.remove('scale-105', 'ring-4', 'ring-amber-300');
+                };
+
+                uttr.onend = cleanup;
+                uttr.onerror = cleanup;
+
+                window.speechSynthesis.speak(uttr);
+            }, 120);
         }
 
-        // 初開時初期化
+        // 初期化
         window.onload = function() {
+            loadVoices();
             renderPlate(1);
             renderPlate(2);
             updateMath();
