@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -92,21 +93,21 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start p-2 sm:p-3 pb-6 sm:pb-10 text-slate-800 overflow-y-auto">
+<body class="min-h-screen flex flex-col items-center justify-start pt-1 sm:pt-1.5 px-2 sm:px-3 pb-14 sm:pb-20 text-slate-800 overflow-y-auto">
 
-    <!-- ヘッダー：式表示とよみあげボタン -->
-    <header class="w-full max-w-6xl bg-white rounded-2xl shadow-md border-2 border-amber-200 px-3 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between gap-2 shrink-0">
+    <!-- ヘッダー：式表示とよみあげボタン（高さを少し上に詰めてコンパクト化） -->
+    <header class="w-full max-w-6xl bg-white rounded-2xl shadow-md border-2 border-amber-200 px-3 py-1 sm:px-5 sm:py-1.5 flex items-center justify-between gap-2 shrink-0">
         <!-- 式の表示 -->
         <div class="flex items-center justify-center flex-1 text-xl sm:text-3xl md:text-4xl font-extrabold tracking-wider text-slate-700 gap-1.5 sm:gap-3">
             <span id="num1-text" class="text-rose-500 min-w-[2ch] text-right">0</span>
             <span class="text-amber-400">＋</span>
             <span id="num2-text" class="text-emerald-600 min-w-[2ch] text-right">0</span>
             <span class="text-amber-400">＝</span>
-            <span id="ans-text" class="text-amber-600 bg-amber-100 px-2.5 py-0.5 sm:px-4 sm:py-1 rounded-xl border-2 border-amber-300 min-w-[2.5ch] text-center">0</span>
+            <span id="ans-text" class="text-amber-600 bg-amber-100 px-2.5 py-0.5 sm:px-4 sm:py-0.5 rounded-xl border-2 border-amber-300 min-w-[2.5ch] text-center">0</span>
         </div>
 
         <!-- 音声よみあげボタン -->
-        <button id="speak-btn" onclick="speakEquation()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl shadow-md transform active:scale-95 flex items-center gap-1.5 text-sm sm:text-base md:text-lg transition shrink-0">
+        <button id="speak-btn" onclick="speakEquation()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold px-3 py-1 sm:px-5 sm:py-1.5 rounded-xl shadow-md transform active:scale-95 flex items-center gap-1.5 text-sm sm:text-base md:text-lg transition shrink-0">
             <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zM16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM3 9v6h4l5 5V4L7 9H3z"/>
             </svg>
@@ -115,7 +116,7 @@
     </header>
 
     <!-- メインコンテンツ：1項目 ＋ 2項目 ＝ こたえ（横3列並び・高さ固定） -->
-    <main class="w-full max-w-6xl flex-none flex flex-row items-stretch justify-between gap-1 sm:gap-2 mt-2 px-0.5">
+    <main class="w-full max-w-6xl flex-none flex flex-row items-stretch justify-between gap-1 sm:gap-2 mt-1.5 px-0.5">
         
         <!-- お皿 1（りんご2行分の高さで固定） -->
         <section class="flex-1 min-w-0 h-[225px] sm:h-[255px] md:h-[290px] flex flex-col justify-between items-center bg-amber-100/60 p-1.5 sm:p-2.5 rounded-2xl border-2 border-amber-200">
@@ -153,8 +154,8 @@
                     </button>
                 </div>
 
-                <!-- へらすボタン -->
-                <button onclick="removeApple(1)" class="bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold px-3 py-0.5 sm:px-4 sm:py-1 rounded-full border-2 border-rose-300 text-xs sm:text-sm shadow-sm transition active:scale-95">
+                <!-- へらすボタン（濃い黄色〜オレンジ・白文字） -->
+                <button onclick="removeApple(1)" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3.5 py-0.5 sm:px-5 sm:py-1 rounded-full border-2 border-amber-600 text-xs sm:text-sm shadow-sm transition active:scale-95">
                     へらす
                 </button>
             </div>
@@ -199,8 +200,8 @@
                     </button>
                 </div>
 
-                <!-- へらすボタン -->
-                <button onclick="removeApple(2)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold px-3 py-0.5 sm:px-4 sm:py-1 rounded-full border-2 border-emerald-300 text-xs sm:text-sm shadow-sm transition active:scale-95">
+                <!-- へらすボタン（濃い緑・白文字） -->
+                <button onclick="removeApple(2)" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3.5 py-0.5 sm:px-5 sm:py-1 rounded-full border-2 border-emerald-600 text-xs sm:text-sm shadow-sm transition active:scale-95">
                     へらす
                 </button>
             </div>
